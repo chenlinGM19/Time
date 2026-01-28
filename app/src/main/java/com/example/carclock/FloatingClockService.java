@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -39,8 +40,15 @@ public class FloatingClockService extends Service {
     public static final String ACTION_TOGGLE_SECONDS = "ACTION_TOGGLE_SECONDS";
     public static final String ACTION_TOGGLE_BG = "ACTION_TOGGLE_BG";
     public static final String ACTION_TOGGLE_WEIGHT = "ACTION_TOGGLE_WEIGHT";
+    public static final String ACTION_RESET_POSITION = "ACTION_RESET_POSITION";
+    public static final String ACTION_TOGGLE_ORIENTATION = "ACTION_TOGGLE_ORIENTATION";
+    public static final String ACTION_TOGGLE_TOASTS = "ACTION_TOGGLE_TOASTS"; // New Action
     
-    // Broadcast Actions for Tasker
+    // Explicit Tasker Actions
+    public static final String ACTION_SET_VISIBLE = "ACTION_SET_VISIBLE";
+    public static final String ACTION_SET_BLOCKING = "ACTION_SET_BLOCKING";
+    
+    // Broadcast Actions for Tasker (Events)
     public static final String ACTION_BROADCAST_CLICK = "com.example.carclock.CLOCK_CLICK";
     public static final String ACTION_BROADCAST_DOUBLE_CLICK = "com.example.carclock.CLOCK_DOUBLE_CLICK";
     public static final String ACTION_BROADCAST_LONG_PRESS = "com.example.carclock.CLOCK_LONG_PRESS";
@@ -55,6 +63,8 @@ public class FloatingClockService extends Service {
     private boolean showSeconds = true;
     private boolean isBgVisible = true;
     private boolean isBold = false;
+    private boolean isVertical = false;
+    private boolean showToasts = true; // New Flag
 
     private float currentTextSize = 24f;
     private int currentStyleIndex = 0;
@@ -69,9 +79,18 @@ public class FloatingClockService extends Service {
         @Override
         public void run() {
             if (tvTime != null) {
-                String pattern = showSeconds ? "HH:mm:ss" : "HH:mm";
-                SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
-                tvTime.setText(sdf.format(new Date()));
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+                String timeText = sdf.format(new Date());
+                
+                if (!showSeconds) {
+                    timeText = timeText.substring(0, 5); // HH:mm
+                }
+                
+                if (isVertical) {
+                    timeText = timeText.replace(":", "\n");
+                }
+                
+                tvTime.setText(timeText);
             }
             mainHandler.postDelayed(this, 1000);
         }
@@ -146,12 +165,38 @@ public class FloatingClockService extends Service {
         );
 
         params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 50;
-        params.y = 50;
+        
+        // Calculate Center Position for Initial Start
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
+        
+        // Estimate size or set loosely, center logic:
+        params.x = (screenWidth / 2) - 100; // rough offset, will be exact after layout
+        params.y = (screenHeight / 2) - 50;
 
         windowManager.addView(floatingView, params);
+        
+        // Refine position after view is added
+        floatingView.post(() -> resetPositionToCenter());
+        
         mainHandler.post(updateTimeRunnable);
         setupTouchListener();
+    }
+
+    private void resetPositionToCenter() {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
+        
+        params.x = (screenWidth - floatingView.getWidth()) / 2;
+        params.y = (screenHeight - floatingView.getHeight()) / 2;
+        
+        try {
+            windowManager.updateViewLayout(floatingView, params);
+        } catch (Exception e) {
+            // View might be detached
+        }
     }
 
     private void setupTouchListener() {
@@ -230,7 +275,11 @@ public class FloatingClockService extends Service {
     private void sendBroadcastAction(String action, int toastResId) {
         Intent intent = new Intent(action);
         sendBroadcast(intent);
-        Toast.makeText(this, toastResId, Toast.LENGTH_SHORT).show();
+        
+        // Only show toast if enabled
+        if (showToasts) {
+            Toast.makeText(this, toastResId, Toast.LENGTH_SHORT).show();
+        }
     }
     
     private void openMainActivity() {
@@ -260,8 +309,7 @@ public class FloatingClockService extends Service {
                     break;
                 case ACTION_TOGGLE_SECONDS:
                     showSeconds = !showSeconds;
-                    mainHandler.removeCallbacks(updateTimeRunnable);
-                    mainHandler.post(updateTimeRunnable);
+                    refreshTimeImmediately();
                     break;
                 case ACTION_TOGGLE_BG:
                     toggleBackground();
@@ -269,9 +317,38 @@ public class FloatingClockService extends Service {
                 case ACTION_TOGGLE_WEIGHT:
                     toggleFontWeight();
                     break;
+                case ACTION_RESET_POSITION:
+                    resetPositionToCenter();
+                    break;
+                case ACTION_TOGGLE_ORIENTATION:
+                    isVertical = !isVertical;
+                    refreshTimeImmediately();
+                    break;
+                case ACTION_TOGGLE_TOASTS:
+                    showToasts = !showToasts;
+                    // Provide feedback for this specific configuration action even if toasts are "off"
+                    Toast.makeText(this, "Tips: " + (showToasts ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+                    break;
+                case ACTION_SET_VISIBLE:
+                    if (floatingView.getVisibility() != View.VISIBLE) {
+                        floatingView.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                case ACTION_SET_BLOCKING:
+                    if (isPassthrough) {
+                        isPassthrough = false;
+                        params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                        windowManager.updateViewLayout(floatingView, params);
+                    }
+                    break;
             }
         }
         return START_STICKY;
+    }
+    
+    private void refreshTimeImmediately() {
+        mainHandler.removeCallbacks(updateTimeRunnable);
+        mainHandler.post(updateTimeRunnable);
     }
 
     private void toggleVisibility() {

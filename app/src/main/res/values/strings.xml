@@ -2,33 +2,49 @@
     <string name="app_name">Car Floating Clock</string>
     <string name="perm_required">需要悬浮窗权限才能运行</string>
     <string name="grant_perm">授予权限</string>
-    <string name="control_panel">控制面板</string>
-    <string name="toggle_show">显示/隐藏</string>
-    <string name="toggle_lock">锁定位置</string>
-    <string name="increase_size">放大字体</string>
-    <string name="decrease_size">缩小字体</string>
-    <string name="change_style">切换样式</string>
-    <string name="status_locked">状态: 已锁定</string>
-    <string name="status_unlocked">状态: 可拖拽</string>
-    <string name="desc">适用于Android 9车机。点击下方按钮调整时钟。</string>
+    <string name="control_panel">Car Clock 设置</string>
     
-    <!-- New Features -->
-    <string name="toggle_passthrough">点击穿透/阻挡</string>
-    <string name="toggle_seconds">显示/隐藏秒</string>
-    <string name="toggle_bg">背景开/关</string>
-    <string name="toggle_weight">字体粗/细</string>
-    <string name="status_passthrough">状态: 点击穿透 (不可拖拽)</string>
-    <string name="status_blocking">状态: 阻挡点击 (可拖拽)</string>
+    <!-- Groups -->
+    <string name="group_appearance">外观样式</string>
+    <string name="group_behavior">交互与行为</string>
+    <string name="group_automation">Tasker 自动化集成</string>
     
-    <!-- Tasker -->
-    <string name="tasker_click_sent">Tasker: 单击信号</string>
-    <string name="tasker_double_click_sent">Tasker: 双击信号</string>
-    <string name="tasker_long_press_sent">Tasker: 长按信号 + 打开主页</string>
+    <!-- Actions -->
+    <string name="toggle_show">显示/隐藏时钟</string>
+    <string name="reset_pos">位置归位 (居中)</string>
+    <string name="increase_size">放大字体 (+)</string>
+    <string name="decrease_size">缩小字体 (-)</string>
+    <string name="change_style">切换颜色风格</string>
+    <string name="toggle_orient">横/竖排版切换</string>
+    <string name="toggle_bg">背景: 开/关</string>
+    <string name="toggle_weight">字体: 粗/细</string>
+    <string name="toggle_seconds">秒针: 显示/隐藏</string>
+    
+    <!-- Logic Actions -->
+    <string name="toggle_passthrough">点击穿透模式</string>
+    <string name="toggle_tips">操作提示: 开/关</string>
+    
+    <string name="desc">适用于 Android 9 车机。使用下方按钮自定义悬浮窗。</string>
+    
+    <!-- Status Messages -->
+    <string name="status_passthrough">当前: 点击穿透 (不可拖拽)</string>
+    <string name="status_blocking">当前: 阻挡点击 (可拖拽)</string>
+    
+    <!-- Tasker Broadcasts (Events sent FROM app) -->
+    <string name="tasker_click_sent">Tasker 信号: 单击</string>
+    <string name="tasker_double_click_sent">Tasker 信号: 双击</string>
+    <string name="tasker_long_press_sent">Tasker 信号: 长按</string>
     
     <!-- Clipboard Copy -->
-    <string name="tasker_setup">复制 Tasker 广播动作</string>
-    <string name="copy_click">复制单击</string>
-    <string name="copy_double">复制双击</string>
-    <string name="copy_long">复制长按</string>
-    <string name="toast_copied">已复制: </string>
+    <string name="tasker_setup">复制触发信号 (Events)</string>
+    <string name="copy_click">复制单击 Intent</string>
+    <string name="copy_double">复制双击 Intent</string>
+    <string name="copy_long">复制长按 Intent</string>
+    <string name="toast_copied">已复制到剪贴板: </string>
+    <string name="toast_cmd_sent">指令已发送</string>
+    
+    <!-- Tasker Controls (Commands TO app) -->
+    <string name="tasker_controls">复制控制指令 (Actions)</string>
+    <string name="copy_set_visible">复制 [强制显示]</string>
+    <string name="copy_set_blocking">复制 [强制阻挡]</string>
 </resources>

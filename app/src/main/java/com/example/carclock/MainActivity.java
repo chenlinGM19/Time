@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,18 +35,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
+        // Appearance Group
         Button btnToggleShow = findViewById(R.id.btnToggleShow);
-        Button btnTogglePassthrough = findViewById(R.id.btnTogglePassthrough);
-        Button btnStyle = findViewById(R.id.btnStyle);
+        Button btnResetPos = findViewById(R.id.btnResetPos);
         Button btnSizeUp = findViewById(R.id.btnSizeUp);
         Button btnSizeDown = findViewById(R.id.btnSizeDown);
-        
-        // New Buttons
-        Button btnToggleSeconds = findViewById(R.id.btnToggleSeconds);
+        Button btnStyle = findViewById(R.id.btnStyle);
+        Button btnToggleOrient = findViewById(R.id.btnToggleOrient);
         Button btnToggleBg = findViewById(R.id.btnToggleBg);
         Button btnToggleWeight = findViewById(R.id.btnToggleWeight);
+        
+        // Behavior Group
+        Button btnTogglePassthrough = findViewById(R.id.btnTogglePassthrough);
+        Button btnToggleSeconds = findViewById(R.id.btnToggleSeconds);
+        Button btnToggleTips = findViewById(R.id.btnToggleTips);
 
         btnToggleShow.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_VISIBILITY));
+        btnResetPos.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_RESET_POSITION));
+        btnSizeUp.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_INCREASE_SIZE));
+        btnSizeDown.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_DECREASE_SIZE));
+        btnStyle.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_CHANGE_STYLE));
+        btnToggleOrient.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_ORIENTATION));
+        btnToggleBg.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_BG));
+        btnToggleWeight.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_WEIGHT));
         
         btnTogglePassthrough.setOnClickListener(v -> {
             isPassthrough = !isPassthrough;
@@ -55,16 +65,12 @@ public class MainActivity extends AppCompatActivity {
             sendCommand(FloatingClockService.ACTION_TOGGLE_PASSTHROUGH);
         });
         
-        btnStyle.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_CHANGE_STYLE));
-        btnSizeUp.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_INCREASE_SIZE));
-        btnSizeDown.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_DECREASE_SIZE));
-        
         btnToggleSeconds.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_SECONDS));
-        btnToggleBg.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_BG));
-        btnToggleWeight.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_WEIGHT));
+        btnToggleTips.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_TOASTS));
     }
     
     private void setupClipboardButtons() {
+        // Event Intents (Sent by App)
         Button btnCopyClick = findViewById(R.id.btnCopyClick);
         Button btnCopyDouble = findViewById(R.id.btnCopyDouble);
         Button btnCopyLong = findViewById(R.id.btnCopyLong);
@@ -77,6 +83,16 @@ public class MainActivity extends AppCompatActivity {
             
         btnCopyLong.setOnClickListener(v -> 
             copyToClipboard("Long Press Intent", FloatingClockService.ACTION_BROADCAST_LONG_PRESS));
+            
+        // Control Intents (Received by App)
+        Button btnCopySetVisible = findViewById(R.id.btnCopySetVisible);
+        Button btnCopySetBlocking = findViewById(R.id.btnCopySetBlocking);
+
+        btnCopySetVisible.setOnClickListener(v -> 
+            copyToClipboard("Force Visible Intent", FloatingClockService.ACTION_SET_VISIBLE));
+            
+        btnCopySetBlocking.setOnClickListener(v -> 
+            copyToClipboard("Force Blocking Intent", FloatingClockService.ACTION_SET_BLOCKING));
     }
 
     private void copyToClipboard(String label, String text) {
@@ -97,6 +113,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, FloatingClockService.class);
         intent.setAction(action);
         startService(intent);
+        
+        // UI Feedback since service state is loosely coupled
+        Toast.makeText(this, R.string.toast_cmd_sent, Toast.LENGTH_SHORT).show();
     }
 
     private void checkOverlayPermission() {
