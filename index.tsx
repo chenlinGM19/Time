@@ -1,1 +1,2 @@
-// File deleted. Logic moved to Android Native.
+// This file is removed as the project is now a Native Android Project.
+// Please refer to the java/ and res/ directories for source code.
