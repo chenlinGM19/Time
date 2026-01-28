@@ -77,7 +77,7 @@
 
                     <Button
                         android:id="@+id/btnToggleShow"
-                        style="@style/Widget.MaterialComponents.Button.TonalButton"
+                        style="@style/Widget.MaterialComponents.Button"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
@@ -183,7 +183,7 @@
 
                     <Button
                         android:id="@+id/btnTogglePassthrough"
-                        style="@style/Widget.MaterialComponents.Button.TonalButton"
+                        style="@style/Widget.MaterialComponents.Button"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
