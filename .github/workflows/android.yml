@@ -19,15 +19,24 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+          # 暂时移除自动缓存以解决路径匹配报错问题
+          # 或者在有完整项目结构后重新启用
 
       - name: Grant execute permission for gradlew
-        run: chmod +x android/gradlew
+        run: |
+          if [ -f "android/gradlew" ]; then
+            chmod +x android/gradlew
+          fi
 
       - name: Build with Gradle
         run: |
           cd android
-          ./gradlew assembleDebug
+          # 如果 gradlew 不存在，尝试使用系统安装的 gradle
+          if [ -f "gradlew" ]; then
+            ./gradlew assembleDebug
+          else
+            gradle assembleDebug
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
