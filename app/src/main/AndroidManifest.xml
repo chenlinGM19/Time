@@ -29,9 +29,10 @@
             </intent-filter>
         </activity>
 
+        <!-- 将 exported 改为 true，允许外部应用(Tasker)调用 -->
         <service android:name=".FloatingClockService" 
                  android:enabled="true"
-                 android:exported="false" />
+                 android:exported="true" />
     </application>
 
 </manifest>

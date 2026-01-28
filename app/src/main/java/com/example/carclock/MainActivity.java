@@ -4,6 +4,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,6 +18,9 @@ import androidx.appcompat.app.AppCompatActivity;
 public class MainActivity extends AppCompatActivity {
 
     private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
+    private static final String PREFS_NAME = "CarClockPrefs";
+    private static final String KEY_SHOW_TOASTS = "show_toasts";
+    
     private TextView tvStatus;
     private boolean isPassthrough = false;
 
@@ -100,7 +104,14 @@ public class MainActivity extends AppCompatActivity {
         ClipData clip = ClipData.newPlainText(label, text);
         if (clipboard != null) {
             clipboard.setPrimaryClip(clip);
-            Toast.makeText(this, getString(R.string.toast_copied) + " " + text, Toast.LENGTH_SHORT).show();
+            
+            // Respect global toast settings
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            boolean showToasts = prefs.getBoolean(KEY_SHOW_TOASTS, true);
+            
+            if (showToasts) {
+                Toast.makeText(this, getString(R.string.toast_copied) + " " + text, Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -114,8 +125,7 @@ public class MainActivity extends AppCompatActivity {
         intent.setAction(action);
         startService(intent);
         
-        // UI Feedback since service state is loosely coupled
-        Toast.makeText(this, R.string.toast_cmd_sent, Toast.LENGTH_SHORT).show();
+        // REMOVED: Toast.makeText(this, R.string.toast_cmd_sent, Toast.LENGTH_SHORT).show();
     }
 
     private void checkOverlayPermission() {

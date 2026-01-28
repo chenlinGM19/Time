@@ -7,23 +7,26 @@
     android:background="#121212"
     tools:context=".MainActivity">
 
-    <!-- Fixed Header -->
+    <!-- Header: Compact -->
     <LinearLayout
         android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
         android:background="#1F1F1F"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/control_panel"
             android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
@@ -32,8 +35,7 @@
             android:layout_height="wrap_content"
             android:text="@string/status_blocking"
             android:textColor="#FFC107"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
     <!-- Scrollable Content -->
@@ -50,57 +52,86 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Section 1: Appearance -->
+            <!-- Card 1: Main Controls (Compacted) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_clock_rounded"
                 android:backgroundTint="#252525"
-                android:padding="12dp"
-                android:layout_marginBottom="12dp">
+                android:padding="8dp"
+                android:layout_marginBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/group_appearance"
                     android:textColor="#2196F3"
+                    android:textSize="12sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="4dp"/>
 
-                <GridLayout
+                <!-- Row 1 -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:columnCount="2"
-                    android:rowCount="4"
-                    android:alignmentMode="alignMargins">
-
+                    android:orientation="horizontal">
+                    
                     <Button
                         android:id="@+id/btnToggleShow"
                         style="@style/Widget.MaterialComponents.Button"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/toggle_show" />
 
                     <Button
                         android:id="@+id/btnResetPos"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/reset_pos"
                         android:textColor="#DDDDDD"/>
+
+                    <Button
+                        android:id="@+id/btnStyle"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/change_style"
+                        android:textColor="#DDDDDD"/>
+                </LinearLayout>
+
+                <!-- Row 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
 
                     <Button
                         android:id="@+id/btnSizeUp"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/increase_size"
                         android:textColor="#DDDDDD"/>
 
@@ -108,137 +139,138 @@
                         android:id="@+id/btnSizeDown"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/decrease_size"
                         android:textColor="#DDDDDD"/>
 
                     <Button
-                        android:id="@+id/btnStyle"
+                        android:id="@+id/btnToggleBg"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
-                        android:text="@string/change_style"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/toggle_bg"
                         android:textColor="#DDDDDD"/>
-
+                        
                     <Button
                         android:id="@+id/btnToggleOrient"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/toggle_orient"
                         android:textColor="#DDDDDD"/>
-                        
-                    <Button
-                        android:id="@+id/btnToggleBg"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
-                        android:text="@string/toggle_bg"
-                        android:textColor="#DDDDDD"/>
-
-                    <Button
-                        android:id="@+id/btnToggleWeight"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
-                        android:text="@string/toggle_weight"
-                        android:textColor="#DDDDDD"/>
-
-                </GridLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Section 2: Behavior -->
+            <!-- Card 2: Behavior (Compacted) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_clock_rounded"
                 android:backgroundTint="#252525"
-                android:padding="12dp"
-                android:layout_marginBottom="12dp">
+                android:padding="8dp"
+                android:layout_marginBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/group_behavior"
                     android:textColor="#4CAF50"
+                    android:textSize="12sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="4dp"/>
 
-                <GridLayout
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:columnCount="2"
-                    android:alignmentMode="alignMargins">
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/btnTogglePassthrough"
                         style="@style/Widget.MaterialComponents.Button"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1.2"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/toggle_passthrough" />
                         
                     <Button
                         android:id="@+id/btnToggleSeconds"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/toggle_seconds"
+                        android:textColor="#DDDDDD"/>
+                        
+                    <Button
+                        android:id="@+id/btnToggleWeight"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/toggle_weight"
                         android:textColor="#DDDDDD"/>
 
                     <Button
                         android:id="@+id/btnToggleTips"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="4dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:textSize="11sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/toggle_tips"
                         android:textColor="#FF9800"/>
-
-                </GridLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Section 3: Tasker Automation -->
+            <!-- Card 3: Tasker Automation (Compacted) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_clock_rounded"
                 android:backgroundTint="#252525"
-                android:padding="12dp"
-                android:layout_marginBottom="32dp">
+                android:padding="8dp"
+                android:layout_marginBottom="24dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/group_automation"
                     android:textColor="#FF5722"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tasker_setup"
-                    android:textColor="#AAAAAA"
                     android:textSize="12sp"
+                    android:textStyle="bold"
                     android:layout_marginBottom="4dp"/>
 
+                <!-- Events Copy -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -248,30 +280,36 @@
                         android:id="@+id/btnCopyClick"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="@string/copy_click"
-                        android:textSize="11sp"
+                        android:text="Copy Click"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:textColor="#BBBBBB"/>
 
                     <Button
                         android:id="@+id/btnCopyDouble"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="@string/copy_double"
-                        android:textSize="11sp"
+                        android:text="Copy Double"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:textColor="#BBBBBB"/>
 
                     <Button
                         android:id="@+id/btnCopyLong"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="@string/copy_long"
-                        android:textSize="11sp"
+                        android:text="Copy Long"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:textColor="#BBBBBB"/>
                 </LinearLayout>
 
@@ -279,16 +317,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#333333"
-                    android:layout_marginVertical="8dp"/>
+                    android:layout_marginVertical="2dp"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tasker_controls"
-                    android:textColor="#AAAAAA"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="4dp"/>
-
+                <!-- Control Copy -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -298,20 +329,24 @@
                         android:id="@+id/btnCopySetVisible"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="@string/copy_set_visible"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:textColor="#BBBBBB"/>
 
                     <Button
                         android:id="@+id/btnCopySetBlocking"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="@string/copy_set_blocking"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:textColor="#BBBBBB"/>
                 </LinearLayout>
 

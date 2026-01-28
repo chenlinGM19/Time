@@ -4,7 +4,11 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
@@ -32,26 +36,30 @@ import java.util.Locale;
 
 public class FloatingClockService extends Service {
 
-    public static final String ACTION_TOGGLE_VISIBILITY = "ACTION_TOGGLE_VISIBILITY";
-    public static final String ACTION_TOGGLE_PASSTHROUGH = "ACTION_TOGGLE_PASSTHROUGH";
-    public static final String ACTION_INCREASE_SIZE = "ACTION_INCREASE_SIZE";
-    public static final String ACTION_DECREASE_SIZE = "ACTION_DECREASE_SIZE";
-    public static final String ACTION_CHANGE_STYLE = "ACTION_CHANGE_STYLE";
-    public static final String ACTION_TOGGLE_SECONDS = "ACTION_TOGGLE_SECONDS";
-    public static final String ACTION_TOGGLE_BG = "ACTION_TOGGLE_BG";
-    public static final String ACTION_TOGGLE_WEIGHT = "ACTION_TOGGLE_WEIGHT";
-    public static final String ACTION_RESET_POSITION = "ACTION_RESET_POSITION";
-    public static final String ACTION_TOGGLE_ORIENTATION = "ACTION_TOGGLE_ORIENTATION";
-    public static final String ACTION_TOGGLE_TOASTS = "ACTION_TOGGLE_TOASTS"; // New Action
+    // Fully qualified actions for reliability
+    public static final String ACTION_TOGGLE_VISIBILITY = "com.example.carclock.ACTION_TOGGLE_VISIBILITY";
+    public static final String ACTION_TOGGLE_PASSTHROUGH = "com.example.carclock.ACTION_TOGGLE_PASSTHROUGH";
+    public static final String ACTION_INCREASE_SIZE = "com.example.carclock.ACTION_INCREASE_SIZE";
+    public static final String ACTION_DECREASE_SIZE = "com.example.carclock.ACTION_DECREASE_SIZE";
+    public static final String ACTION_CHANGE_STYLE = "com.example.carclock.ACTION_CHANGE_STYLE";
+    public static final String ACTION_TOGGLE_SECONDS = "com.example.carclock.ACTION_TOGGLE_SECONDS";
+    public static final String ACTION_TOGGLE_BG = "com.example.carclock.ACTION_TOGGLE_BG";
+    public static final String ACTION_TOGGLE_WEIGHT = "com.example.carclock.ACTION_TOGGLE_WEIGHT";
+    public static final String ACTION_RESET_POSITION = "com.example.carclock.ACTION_RESET_POSITION";
+    public static final String ACTION_TOGGLE_ORIENTATION = "com.example.carclock.ACTION_TOGGLE_ORIENTATION";
+    public static final String ACTION_TOGGLE_TOASTS = "com.example.carclock.ACTION_TOGGLE_TOASTS";
     
     // Explicit Tasker Actions
-    public static final String ACTION_SET_VISIBLE = "ACTION_SET_VISIBLE";
-    public static final String ACTION_SET_BLOCKING = "ACTION_SET_BLOCKING";
+    public static final String ACTION_SET_VISIBLE = "com.example.carclock.ACTION_SET_VISIBLE";
+    public static final String ACTION_SET_BLOCKING = "com.example.carclock.ACTION_SET_BLOCKING";
     
     // Broadcast Actions for Tasker (Events)
     public static final String ACTION_BROADCAST_CLICK = "com.example.carclock.CLOCK_CLICK";
     public static final String ACTION_BROADCAST_DOUBLE_CLICK = "com.example.carclock.CLOCK_DOUBLE_CLICK";
     public static final String ACTION_BROADCAST_LONG_PRESS = "com.example.carclock.CLOCK_LONG_PRESS";
+
+    private static final String PREFS_NAME = "CarClockPrefs";
+    private static final String KEY_SHOW_TOASTS = "show_toasts";
 
     private WindowManager windowManager;
     private View floatingView;
@@ -64,15 +72,27 @@ public class FloatingClockService extends Service {
     private boolean isBgVisible = true;
     private boolean isBold = false;
     private boolean isVertical = false;
-    private boolean showToasts = true; // New Flag
+    private boolean showToasts = true;
 
     private float currentTextSize = 24f;
     private int currentStyleIndex = 0;
     
+    private SharedPreferences prefs;
+
     // Touch Handling Variables
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private int clickCount = 0;
     private boolean isLongPressTriggered = false;
+
+    // Command Receiver for Tasker Broadcasts
+    private final BroadcastReceiver commandReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && intent.getAction() != null) {
+                handleAction(intent.getAction());
+            }
+        }
+    };
     
     // Time Update Runnable
     private final Runnable updateTimeRunnable = new Runnable() {
@@ -116,8 +136,37 @@ public class FloatingClockService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        // Load preferences
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        showToasts = prefs.getBoolean(KEY_SHOW_TOASTS, true);
+
         startForegroundService();
         initializeFloatingWindow();
+        registerCommandReceiver();
+    }
+
+    private void registerCommandReceiver() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_TOGGLE_VISIBILITY);
+        filter.addAction(ACTION_TOGGLE_PASSTHROUGH);
+        filter.addAction(ACTION_INCREASE_SIZE);
+        filter.addAction(ACTION_DECREASE_SIZE);
+        filter.addAction(ACTION_CHANGE_STYLE);
+        filter.addAction(ACTION_TOGGLE_SECONDS);
+        filter.addAction(ACTION_TOGGLE_BG);
+        filter.addAction(ACTION_TOGGLE_WEIGHT);
+        filter.addAction(ACTION_RESET_POSITION);
+        filter.addAction(ACTION_TOGGLE_ORIENTATION);
+        filter.addAction(ACTION_TOGGLE_TOASTS);
+        filter.addAction(ACTION_SET_VISIBLE);
+        filter.addAction(ACTION_SET_BLOCKING);
+        
+        // Exported receiver for Tasker compatibility
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(commandReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(commandReceiver, filter);
+        }
     }
 
     private void startForegroundService() {
@@ -166,18 +215,15 @@ public class FloatingClockService extends Service {
 
         params.gravity = Gravity.TOP | Gravity.START;
         
-        // Calculate Center Position for Initial Start
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         int screenWidth = metrics.widthPixels;
         int screenHeight = metrics.heightPixels;
         
-        // Estimate size or set loosely, center logic:
-        params.x = (screenWidth / 2) - 100; // rough offset, will be exact after layout
+        params.x = (screenWidth / 2) - 100;
         params.y = (screenHeight / 2) - 50;
 
         windowManager.addView(floatingView, params);
         
-        // Refine position after view is added
         floatingView.post(() -> resetPositionToCenter());
         
         mainHandler.post(updateTimeRunnable);
@@ -219,7 +265,6 @@ public class FloatingClockService extends Service {
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
                         
-                        // Reset states
                         isLongPressTriggered = false;
                         mainHandler.postDelayed(longPressRunnable, LONG_PRESS_TIMEOUT);
                         return true;
@@ -228,11 +273,9 @@ public class FloatingClockService extends Service {
                         float diffX = Math.abs(event.getRawX() - initialTouchX);
                         float diffY = Math.abs(event.getRawY() - initialTouchY);
                         
-                        // If moved significantly, cancel long press
                         if (diffX > CLICK_THRESHOLD || diffY > CLICK_THRESHOLD) {
                             mainHandler.removeCallbacks(longPressRunnable);
                             
-                            // Only update position (drag) if not long pressed yet
                             if (!isLongPressTriggered) {
                                 params.x = initialX + (int) (event.getRawX() - initialTouchX);
                                 params.y = initialY + (int) (event.getRawY() - initialTouchY);
@@ -244,7 +287,6 @@ public class FloatingClockService extends Service {
                     case MotionEvent.ACTION_UP:
                         mainHandler.removeCallbacks(longPressRunnable);
 
-                        // If long press triggered, consume the event, do not process as click
                         if (isLongPressTriggered) {
                             return true; 
                         }
@@ -252,14 +294,11 @@ public class FloatingClockService extends Service {
                         float upDiffX = Math.abs(event.getRawX() - initialTouchX);
                         float upDiffY = Math.abs(event.getRawY() - initialTouchY);
 
-                        // It is a click if movement is small
                         if (upDiffX < CLICK_THRESHOLD && upDiffY < CLICK_THRESHOLD) {
                             clickCount++;
                             if (clickCount == 1) {
-                                // Wait 300ms to see if it's a double click
                                 mainHandler.postDelayed(singleClickRunnable, 300);
                             } else if (clickCount == 2) {
-                                // It is a double click
                                 mainHandler.removeCallbacks(singleClickRunnable);
                                 clickCount = 0;
                                 sendBroadcastAction(ACTION_BROADCAST_DOUBLE_CLICK, R.string.tasker_double_click_sent);
@@ -276,7 +315,6 @@ public class FloatingClockService extends Service {
         Intent intent = new Intent(action);
         sendBroadcast(intent);
         
-        // Only show toast if enabled
         if (showToasts) {
             Toast.makeText(this, toastResId, Toast.LENGTH_SHORT).show();
         }
@@ -291,59 +329,65 @@ public class FloatingClockService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.getAction() != null) {
-            switch (intent.getAction()) {
-                case ACTION_TOGGLE_VISIBILITY:
-                    toggleVisibility();
-                    break;
-                case ACTION_TOGGLE_PASSTHROUGH:
-                    togglePassthrough();
-                    break;
-                case ACTION_INCREASE_SIZE:
-                    changeSize(5f); 
-                    break;
-                case ACTION_DECREASE_SIZE:
-                    changeSize(-5f);
-                    break;
-                case ACTION_CHANGE_STYLE:
-                    cycleStyle();
-                    break;
-                case ACTION_TOGGLE_SECONDS:
-                    showSeconds = !showSeconds;
-                    refreshTimeImmediately();
-                    break;
-                case ACTION_TOGGLE_BG:
-                    toggleBackground();
-                    break;
-                case ACTION_TOGGLE_WEIGHT:
-                    toggleFontWeight();
-                    break;
-                case ACTION_RESET_POSITION:
-                    resetPositionToCenter();
-                    break;
-                case ACTION_TOGGLE_ORIENTATION:
-                    isVertical = !isVertical;
-                    refreshTimeImmediately();
-                    break;
-                case ACTION_TOGGLE_TOASTS:
-                    showToasts = !showToasts;
-                    // Provide feedback for this specific configuration action even if toasts are "off"
-                    Toast.makeText(this, "Tips: " + (showToasts ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
-                    break;
-                case ACTION_SET_VISIBLE:
-                    if (floatingView.getVisibility() != View.VISIBLE) {
-                        floatingView.setVisibility(View.VISIBLE);
-                    }
-                    break;
-                case ACTION_SET_BLOCKING:
-                    if (isPassthrough) {
-                        isPassthrough = false;
-                        params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-                        windowManager.updateViewLayout(floatingView, params);
-                    }
-                    break;
-            }
+            handleAction(intent.getAction());
         }
         return START_STICKY;
+    }
+    
+    // Unified logic handler for StartCommand (Service) and Receiver (Broadcast)
+    private void handleAction(String action) {
+        switch (action) {
+            case ACTION_TOGGLE_VISIBILITY:
+                toggleVisibility();
+                break;
+            case ACTION_TOGGLE_PASSTHROUGH:
+                togglePassthrough();
+                break;
+            case ACTION_INCREASE_SIZE:
+                changeSize(5f); 
+                break;
+            case ACTION_DECREASE_SIZE:
+                changeSize(-5f);
+                break;
+            case ACTION_CHANGE_STYLE:
+                cycleStyle();
+                break;
+            case ACTION_TOGGLE_SECONDS:
+                showSeconds = !showSeconds;
+                refreshTimeImmediately();
+                break;
+            case ACTION_TOGGLE_BG:
+                toggleBackground();
+                break;
+            case ACTION_TOGGLE_WEIGHT:
+                toggleFontWeight();
+                break;
+            case ACTION_RESET_POSITION:
+                resetPositionToCenter();
+                break;
+            case ACTION_TOGGLE_ORIENTATION:
+                isVertical = !isVertical;
+                refreshTimeImmediately();
+                break;
+            case ACTION_TOGGLE_TOASTS:
+                showToasts = !showToasts;
+                prefs.edit().putBoolean(KEY_SHOW_TOASTS, showToasts).apply();
+                // We always show feedback for the toggle switch itself, so user knows what happened
+                Toast.makeText(this, "Tips: " + (showToasts ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+                break;
+            case ACTION_SET_VISIBLE:
+                if (floatingView.getVisibility() != View.VISIBLE) {
+                    floatingView.setVisibility(View.VISIBLE);
+                }
+                break;
+            case ACTION_SET_BLOCKING:
+                if (isPassthrough) {
+                    isPassthrough = false;
+                    params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                    windowManager.updateViewLayout(floatingView, params);
+                }
+                break;
+        }
     }
     
     private void refreshTimeImmediately() {
@@ -448,5 +492,10 @@ public class FloatingClockService extends Service {
         super.onDestroy();
         if (floatingView != null) windowManager.removeView(floatingView);
         mainHandler.removeCallbacks(updateTimeRunnable);
+        try {
+            unregisterReceiver(commandReceiver);
+        } catch (IllegalArgumentException e) {
+            // receiver not registered
+        }
     }
 }
