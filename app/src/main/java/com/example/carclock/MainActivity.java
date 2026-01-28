@@ -10,15 +10,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
     private TextView tvStatus;
-    private boolean isLocked = false;
+    private boolean isPassthrough = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,22 +33,31 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupButtons() {
         Button btnToggleShow = findViewById(R.id.btnToggleShow);
-        Button btnToggleLock = findViewById(R.id.btnToggleLock);
+        Button btnTogglePassthrough = findViewById(R.id.btnTogglePassthrough);
         Button btnStyle = findViewById(R.id.btnStyle);
         Button btnSizeUp = findViewById(R.id.btnSizeUp);
         Button btnSizeDown = findViewById(R.id.btnSizeDown);
+        
+        // New Buttons
+        Button btnToggleSeconds = findViewById(R.id.btnToggleSeconds);
+        Button btnToggleBg = findViewById(R.id.btnToggleBg);
+        Button btnToggleWeight = findViewById(R.id.btnToggleWeight);
 
         btnToggleShow.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_VISIBILITY));
         
-        btnToggleLock.setOnClickListener(v -> {
-            isLocked = !isLocked;
-            tvStatus.setText(isLocked ? R.string.status_locked : R.string.status_unlocked);
-            sendCommand(FloatingClockService.ACTION_TOGGLE_LOCK);
+        btnTogglePassthrough.setOnClickListener(v -> {
+            isPassthrough = !isPassthrough;
+            tvStatus.setText(isPassthrough ? R.string.status_passthrough : R.string.status_blocking);
+            sendCommand(FloatingClockService.ACTION_TOGGLE_PASSTHROUGH);
         });
         
         btnStyle.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_CHANGE_STYLE));
         btnSizeUp.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_INCREASE_SIZE));
         btnSizeDown.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_DECREASE_SIZE));
+        
+        btnToggleSeconds.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_SECONDS));
+        btnToggleBg.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_BG));
+        btnToggleWeight.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_WEIGHT));
     }
 
     private void sendCommand(String action) {

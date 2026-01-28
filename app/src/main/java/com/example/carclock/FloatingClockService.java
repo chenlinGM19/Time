@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -29,10 +31,13 @@ import java.util.Locale;
 public class FloatingClockService extends Service {
 
     public static final String ACTION_TOGGLE_VISIBILITY = "ACTION_TOGGLE_VISIBILITY";
-    public static final String ACTION_TOGGLE_LOCK = "ACTION_TOGGLE_LOCK";
+    public static final String ACTION_TOGGLE_PASSTHROUGH = "ACTION_TOGGLE_PASSTHROUGH"; // New
     public static final String ACTION_INCREASE_SIZE = "ACTION_INCREASE_SIZE";
     public static final String ACTION_DECREASE_SIZE = "ACTION_DECREASE_SIZE";
     public static final String ACTION_CHANGE_STYLE = "ACTION_CHANGE_STYLE";
+    public static final String ACTION_TOGGLE_SECONDS = "ACTION_TOGGLE_SECONDS"; // New
+    public static final String ACTION_TOGGLE_BG = "ACTION_TOGGLE_BG"; // New
+    public static final String ACTION_TOGGLE_WEIGHT = "ACTION_TOGGLE_WEIGHT"; // New
 
     private WindowManager windowManager;
     private View floatingView;
@@ -40,7 +45,11 @@ public class FloatingClockService extends Service {
     private View rootContainer;
     private WindowManager.LayoutParams params;
 
-    private boolean isLocked = false;
+    private boolean isPassthrough = false; // Controls FLAG_NOT_TOUCHABLE
+    private boolean showSeconds = true;
+    private boolean isBgVisible = true;
+    private boolean isBold = false;
+
     private float currentTextSize = 24f;
     private int currentStyleIndex = 0;
     
@@ -50,7 +59,9 @@ public class FloatingClockService extends Service {
         @Override
         public void run() {
             if (tvTime != null) {
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+                // Determine format based on showSeconds flag
+                String pattern = showSeconds ? "HH:mm:ss" : "HH:mm";
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
                 tvTime.setText(sdf.format(new Date()));
             }
             handler.postDelayed(this, 1000);
@@ -110,7 +121,7 @@ public class FloatingClockService extends Service {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 layoutFlag,
                 // Flags:
-                // NOT_FOCUSABLE: Allows interaction with windows behind it
+                // NOT_FOCUSABLE: Allows interaction with windows behind it (key events)
                 // LAYOUT_NO_LIMITS: Allows window to extend outside of the screen decorations (status bar)
                 // LAYOUT_IN_SCREEN: Required for some versions to truly overlay the status bar
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | 
@@ -143,7 +154,9 @@ public class FloatingClockService extends Service {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (isLocked) return false; // If locked, pass touch through or do nothing
+                // If passthrough is enabled, the system shouldn't even send events here 
+                // because of FLAG_NOT_TOUCHABLE. But as a safeguard:
+                if (isPassthrough) return false; 
 
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
@@ -174,8 +187,8 @@ public class FloatingClockService extends Service {
                 case ACTION_TOGGLE_VISIBILITY:
                     toggleVisibility();
                     break;
-                case ACTION_TOGGLE_LOCK:
-                    isLocked = !isLocked;
+                case ACTION_TOGGLE_PASSTHROUGH:
+                    togglePassthrough();
                     break;
                 case ACTION_INCREASE_SIZE:
                     changeSize(2f);
@@ -185,6 +198,18 @@ public class FloatingClockService extends Service {
                     break;
                 case ACTION_CHANGE_STYLE:
                     cycleStyle();
+                    break;
+                case ACTION_TOGGLE_SECONDS:
+                    showSeconds = !showSeconds;
+                    // Force update immediately
+                    handler.removeCallbacks(updateTimeRunnable);
+                    handler.post(updateTimeRunnable);
+                    break;
+                case ACTION_TOGGLE_BG:
+                    toggleBackground();
+                    break;
+                case ACTION_TOGGLE_WEIGHT:
+                    toggleFontWeight();
                     break;
             }
         }
@@ -199,21 +224,75 @@ public class FloatingClockService extends Service {
         }
     }
 
+    private void togglePassthrough() {
+        isPassthrough = !isPassthrough;
+        if (isPassthrough) {
+            // Add NOT_TOUCHABLE flag -> touches go through to underlying app
+            params.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        } else {
+            // Remove NOT_TOUCHABLE flag -> app intercepts touches (draggable)
+            params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        }
+        windowManager.updateViewLayout(floatingView, params);
+    }
+
+    private void toggleBackground() {
+        isBgVisible = !isBgVisible;
+        if (isBgVisible) {
+            // Restore styling logic
+            applyStyle(currentStyleIndex); 
+        } else {
+            // Remove background
+            rootContainer.setBackground(null);
+        }
+    }
+
+    private void toggleFontWeight() {
+        isBold = !isBold;
+        tvTime.setTypeface(null, isBold ? Typeface.BOLD : Typeface.NORMAL);
+    }
+
     private void changeSize(float delta) {
         currentTextSize += delta;
         if (currentTextSize < 12) currentTextSize = 12;
-        if (currentTextSize > 96) currentTextSize = 96; // Increased max size for car screens
+        if (currentTextSize > 96) currentTextSize = 96; 
         tvTime.setTextSize(currentTextSize);
     }
 
     private void cycleStyle() {
         currentStyleIndex = (currentStyleIndex + 1) % 4;
-        Drawable bg = rootContainer.getBackground();
-        
-        // Ensure background is a GradientDrawable before setting color
+        applyStyle(currentStyleIndex);
+    }
+
+    private void applyStyle(int index) {
+        // If user turned off background, we only update text color but keep BG transparent
+        if (!isBgVisible) {
+            rootContainer.setBackground(null);
+            // Still need to update text color based on style
+             switch (index) {
+                case 0: // Dark
+                case 2: // Blue
+                    tvTime.setTextColor(Color.WHITE);
+                    break;
+                case 1: // Light
+                    tvTime.setTextColor(Color.BLACK);
+                    break;
+                case 3: // Neon
+                    tvTime.setTextColor(Color.GREEN);
+                    break;
+            }
+            return;
+        }
+
+        // Reset background drawable
+        Drawable bg = ContextCompat.getDrawable(this, R.drawable.bg_clock_rounded);
+        // We must mutate it to not share state if we were using multiple instances (good practice)
+        if (bg != null) bg = bg.mutate();
+        rootContainer.setBackground(bg);
+
         if (bg instanceof GradientDrawable) {
             GradientDrawable gradientBg = (GradientDrawable) bg;
-            switch (currentStyleIndex) {
+            switch (index) {
                 case 0: // Dark Translucent
                     gradientBg.setColor(Color.parseColor("#99000000"));
                     gradientBg.setStroke(2, Color.parseColor("#33FFFFFF"));

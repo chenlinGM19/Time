@@ -15,7 +15,7 @@
         android:textColor="#FFFFFF"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:text="@string/desc"
         android:textColor="#AAAAAA"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -34,8 +34,8 @@
     <GridLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:columnCount="3"
-        android:rowCount="2"
+        android:columnCount="4"
+        android:rowCount="3"
         android:useDefaultMargins="true"
         android:alignmentMode="alignMargins"
         app:layout_constraintTop_toBottomOf="@id/tvDesc"
@@ -43,46 +43,63 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Row 1 -->
         <Button
             android:id="@+id/btnToggleShow"
-            android:layout_width="160dp"
+            android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:text="@string/toggle_show" />
 
         <Button
-            android:id="@+id/btnToggleLock"
-            android:layout_width="160dp"
+            android:id="@+id/btnTogglePassthrough"
+            android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:text="@string/toggle_lock" />
+            android:layout_margin="6dp"
+            android:text="@string/toggle_passthrough" />
 
         <Button
             android:id="@+id/btnStyle"
-            android:layout_width="160dp"
+            android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:text="@string/change_style" />
+            
+        <Button
+            android:id="@+id/btnToggleBg"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:text="@string/toggle_bg" />
 
+        <!-- Row 2 -->
         <Button
             android:id="@+id/btnSizeUp"
-            android:layout_width="160dp"
+            android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:text="@string/increase_size" />
 
         <Button
             android:id="@+id/btnSizeDown"
-            android:layout_width="160dp"
+            android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="6dp"
             android:text="@string/decrease_size" />
             
-        <!-- Placeholder for symmetry -->
-        <View
-             android:layout_width="160dp"
+        <Button
+            android:id="@+id/btnToggleSeconds"
+            android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"/>
+            android:layout_margin="6dp"
+            android:text="@string/toggle_seconds" />
+
+        <Button
+            android:id="@+id/btnToggleWeight"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:text="@string/toggle_weight" />
 
     </GridLayout>
 
@@ -90,7 +107,7 @@
         android:id="@+id/tvStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/status_unlocked"
+        android:text="@string/status_blocking"
         android:textColor="#FFC107"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"

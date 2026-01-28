@@ -11,4 +11,12 @@
     <string name="status_locked">状态: 已锁定</string>
     <string name="status_unlocked">状态: 可拖拽</string>
     <string name="desc">适用于Android 9车机。点击下方按钮调整时钟。</string>
+    
+    <!-- New Features -->
+    <string name="toggle_passthrough">点击穿透/阻挡</string>
+    <string name="toggle_seconds">显示/隐藏秒</string>
+    <string name="toggle_bg">背景开/关</string>
+    <string name="toggle_weight">字体粗/细</string>
+    <string name="status_passthrough">状态: 点击穿透 (不可拖拽)</string>
+    <string name="status_blocking">状态: 阻挡点击 (可拖拽)</string>
 </resources>
