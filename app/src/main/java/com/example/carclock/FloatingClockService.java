@@ -4,10 +4,8 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -36,7 +34,7 @@ import java.util.Locale;
 
 public class FloatingClockService extends Service {
 
-    // Fully qualified actions for reliability
+    // Fully qualified actions
     public static final String ACTION_TOGGLE_VISIBILITY = "com.example.carclock.ACTION_TOGGLE_VISIBILITY";
     public static final String ACTION_TOGGLE_PASSTHROUGH = "com.example.carclock.ACTION_TOGGLE_PASSTHROUGH";
     public static final String ACTION_INCREASE_SIZE = "com.example.carclock.ACTION_INCREASE_SIZE";
@@ -48,8 +46,6 @@ public class FloatingClockService extends Service {
     public static final String ACTION_RESET_POSITION = "com.example.carclock.ACTION_RESET_POSITION";
     public static final String ACTION_TOGGLE_ORIENTATION = "com.example.carclock.ACTION_TOGGLE_ORIENTATION";
     public static final String ACTION_TOGGLE_TOASTS = "com.example.carclock.ACTION_TOGGLE_TOASTS";
-    
-    // Explicit Tasker Actions
     public static final String ACTION_SET_VISIBLE = "com.example.carclock.ACTION_SET_VISIBLE";
     public static final String ACTION_SET_BLOCKING = "com.example.carclock.ACTION_SET_BLOCKING";
     
@@ -83,16 +79,6 @@ public class FloatingClockService extends Service {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private int clickCount = 0;
     private boolean isLongPressTriggered = false;
-
-    // Command Receiver for Tasker Broadcasts
-    private final BroadcastReceiver commandReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent != null && intent.getAction() != null) {
-                handleAction(intent.getAction());
-            }
-        }
-    };
     
     // Time Update Runnable
     private final Runnable updateTimeRunnable = new Runnable() {
@@ -142,31 +128,6 @@ public class FloatingClockService extends Service {
 
         startForegroundService();
         initializeFloatingWindow();
-        registerCommandReceiver();
-    }
-
-    private void registerCommandReceiver() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_TOGGLE_VISIBILITY);
-        filter.addAction(ACTION_TOGGLE_PASSTHROUGH);
-        filter.addAction(ACTION_INCREASE_SIZE);
-        filter.addAction(ACTION_DECREASE_SIZE);
-        filter.addAction(ACTION_CHANGE_STYLE);
-        filter.addAction(ACTION_TOGGLE_SECONDS);
-        filter.addAction(ACTION_TOGGLE_BG);
-        filter.addAction(ACTION_TOGGLE_WEIGHT);
-        filter.addAction(ACTION_RESET_POSITION);
-        filter.addAction(ACTION_TOGGLE_ORIENTATION);
-        filter.addAction(ACTION_TOGGLE_TOASTS);
-        filter.addAction(ACTION_SET_VISIBLE);
-        filter.addAction(ACTION_SET_BLOCKING);
-        
-        // Exported receiver for Tasker compatibility
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(commandReceiver, filter, Context.RECEIVER_EXPORTED);
-        } else {
-            registerReceiver(commandReceiver, filter);
-        }
     }
 
     private void startForegroundService() {
@@ -231,6 +192,8 @@ public class FloatingClockService extends Service {
     }
 
     private void resetPositionToCenter() {
+        if (floatingView == null) return;
+        
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         int screenWidth = metrics.widthPixels;
         int screenHeight = metrics.heightPixels;
@@ -331,11 +294,14 @@ public class FloatingClockService extends Service {
         if (intent != null && intent.getAction() != null) {
             handleAction(intent.getAction());
         }
+        // Return START_STICKY to ensure service restarts if killed
         return START_STICKY;
     }
     
-    // Unified logic handler for StartCommand (Service) and Receiver (Broadcast)
+    // Logic handler
     private void handleAction(String action) {
+        if (floatingView == null) return;
+
         switch (action) {
             case ACTION_TOGGLE_VISIBILITY:
                 toggleVisibility();
@@ -372,7 +338,6 @@ public class FloatingClockService extends Service {
             case ACTION_TOGGLE_TOASTS:
                 showToasts = !showToasts;
                 prefs.edit().putBoolean(KEY_SHOW_TOASTS, showToasts).apply();
-                // We always show feedback for the toggle switch itself, so user knows what happened
                 Toast.makeText(this, "Tips: " + (showToasts ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
                 break;
             case ACTION_SET_VISIBLE:
@@ -492,10 +457,5 @@ public class FloatingClockService extends Service {
         super.onDestroy();
         if (floatingView != null) windowManager.removeView(floatingView);
         mainHandler.removeCallbacks(updateTimeRunnable);
-        try {
-            unregisterReceiver(commandReceiver);
-        } catch (IllegalArgumentException e) {
-            // receiver not registered
-        }
     }
 }

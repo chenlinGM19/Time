@@ -29,10 +29,31 @@
             </intent-filter>
         </activity>
 
-        <!-- 将 exported 改为 true，允许外部应用(Tasker)调用 -->
         <service android:name=".FloatingClockService" 
                  android:enabled="true"
-                 android:exported="true" />
+                 android:exported="false" /> <!-- Service no longer exported, accessed via Receiver -->
+
+        <!-- 静态注册广播接收器，Tasker 发送意图的目标 (Target: Broadcast Receiver) -->
+        <receiver android:name=".CommandReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="com.example.carclock.ACTION_TOGGLE_VISIBILITY" />
+                <action android:name="com.example.carclock.ACTION_TOGGLE_PASSTHROUGH" />
+                <action android:name="com.example.carclock.ACTION_INCREASE_SIZE" />
+                <action android:name="com.example.carclock.ACTION_DECREASE_SIZE" />
+                <action android:name="com.example.carclock.ACTION_CHANGE_STYLE" />
+                <action android:name="com.example.carclock.ACTION_TOGGLE_SECONDS" />
+                <action android:name="com.example.carclock.ACTION_TOGGLE_BG" />
+                <action android:name="com.example.carclock.ACTION_TOGGLE_WEIGHT" />
+                <action android:name="com.example.carclock.ACTION_RESET_POSITION" />
+                <action android:name="com.example.carclock.ACTION_TOGGLE_ORIENTATION" />
+                <action android:name="com.example.carclock.ACTION_TOGGLE_TOASTS" />
+                <action android:name="com.example.carclock.ACTION_SET_VISIBLE" />
+                <action android:name="com.example.carclock.ACTION_SET_BLOCKING" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

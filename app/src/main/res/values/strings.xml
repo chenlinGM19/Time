@@ -37,14 +37,25 @@
     
     <!-- Clipboard Copy -->
     <string name="tasker_setup">复制触发信号 (Events)</string>
-    <string name="copy_click">复制单击 Intent</string>
-    <string name="copy_double">复制双击 Intent</string>
-    <string name="copy_long">复制长按 Intent</string>
-    <string name="toast_copied">已复制到剪贴板: </string>
+    <string name="copy_click">复制单击信号</string>
+    <string name="copy_double">复制双击信号</string>
+    <string name="copy_long">复制长按信号</string>
+    <string name="toast_copied">已复制: </string>
     <string name="toast_cmd_sent">指令已发送</string>
     
     <!-- Tasker Controls (Commands TO app) -->
     <string name="tasker_controls">复制控制指令 (Actions)</string>
+    <string name="copy_toggle_vis">复制 [显示开关]</string>
     <string name="copy_set_visible">复制 [强制显示]</string>
     <string name="copy_set_blocking">复制 [强制阻挡]</string>
+    <string name="copy_reset">复制 [位置重置]</string>
+    <string name="copy_pass">复制 [穿透开关]</string>
+    <string name="copy_size_up">复制 [字体 +]</string>
+    <string name="copy_size_down">复制 [字体 -]</string>
+    <string name="copy_style">复制 [样式切换]</string>
+    <string name="copy_orient">复制 [横竖切换]</string>
+    <string name="copy_bg">复制 [背景开关]</string>
+    <string name="copy_weight">复制 [粗细开关]</string>
+    <string name="copy_seconds">复制 [秒针开关]</string>
+    <string name="copy_tips">复制 [提示开关]</string>
 </resources>

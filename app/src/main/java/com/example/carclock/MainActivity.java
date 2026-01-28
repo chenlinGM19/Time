@@ -89,14 +89,45 @@ public class MainActivity extends AppCompatActivity {
             copyToClipboard("Long Press Intent", FloatingClockService.ACTION_BROADCAST_LONG_PRESS));
             
         // Control Intents (Received by App)
+        // Row 1
+        Button btnCopyToggleVis = findViewById(R.id.btnCopyToggleVis);
         Button btnCopySetVisible = findViewById(R.id.btnCopySetVisible);
         Button btnCopySetBlocking = findViewById(R.id.btnCopySetBlocking);
+        
+        btnCopyToggleVis.setOnClickListener(v -> copyToClipboard("Toggle Show Intent", FloatingClockService.ACTION_TOGGLE_VISIBILITY));
+        btnCopySetVisible.setOnClickListener(v -> copyToClipboard("Force Visible Intent", FloatingClockService.ACTION_SET_VISIBLE));
+        btnCopySetBlocking.setOnClickListener(v -> copyToClipboard("Force Blocking Intent", FloatingClockService.ACTION_SET_BLOCKING));
 
-        btnCopySetVisible.setOnClickListener(v -> 
-            copyToClipboard("Force Visible Intent", FloatingClockService.ACTION_SET_VISIBLE));
-            
-        btnCopySetBlocking.setOnClickListener(v -> 
-            copyToClipboard("Force Blocking Intent", FloatingClockService.ACTION_SET_BLOCKING));
+        // Row 2
+        Button btnCopyReset = findViewById(R.id.btnCopyReset);
+        Button btnCopyPass = findViewById(R.id.btnCopyPass);
+        Button btnCopyStyle = findViewById(R.id.btnCopyStyle);
+        
+        btnCopyReset.setOnClickListener(v -> copyToClipboard("Reset Pos Intent", FloatingClockService.ACTION_RESET_POSITION));
+        btnCopyPass.setOnClickListener(v -> copyToClipboard("Toggle Pass Intent", FloatingClockService.ACTION_TOGGLE_PASSTHROUGH));
+        btnCopyStyle.setOnClickListener(v -> copyToClipboard("Change Style Intent", FloatingClockService.ACTION_CHANGE_STYLE));
+        
+        // Row 3
+        Button btnCopySizeUp = findViewById(R.id.btnCopySizeUp);
+        Button btnCopySizeDown = findViewById(R.id.btnCopySizeDown);
+        Button btnCopyOrient = findViewById(R.id.btnCopyOrient);
+        
+        btnCopySizeUp.setOnClickListener(v -> copyToClipboard("Size + Intent", FloatingClockService.ACTION_INCREASE_SIZE));
+        btnCopySizeDown.setOnClickListener(v -> copyToClipboard("Size - Intent", FloatingClockService.ACTION_DECREASE_SIZE));
+        btnCopyOrient.setOnClickListener(v -> copyToClipboard("Toggle Orient Intent", FloatingClockService.ACTION_TOGGLE_ORIENTATION));
+
+        // Row 4
+        Button btnCopyBg = findViewById(R.id.btnCopyBg);
+        Button btnCopyWeight = findViewById(R.id.btnCopyWeight);
+        Button btnCopySeconds = findViewById(R.id.btnCopySeconds);
+        
+        btnCopyBg.setOnClickListener(v -> copyToClipboard("Toggle BG Intent", FloatingClockService.ACTION_TOGGLE_BG));
+        btnCopyWeight.setOnClickListener(v -> copyToClipboard("Toggle Weight Intent", FloatingClockService.ACTION_TOGGLE_WEIGHT));
+        btnCopySeconds.setOnClickListener(v -> copyToClipboard("Toggle Seconds Intent", FloatingClockService.ACTION_TOGGLE_SECONDS));
+
+        // Row 5
+        Button btnCopyTips = findViewById(R.id.btnCopyTips);
+        btnCopyTips.setOnClickListener(v -> copyToClipboard("Toggle Tips Intent", FloatingClockService.ACTION_TOGGLE_TOASTS));
     }
 
     private void copyToClipboard(String label, String text) {

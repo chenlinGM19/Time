@@ -282,7 +282,7 @@
                         android:layout_width="0dp"
                         android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="Copy Click"
+                        android:text="@string/copy_click"
                         android:textSize="10sp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
@@ -294,7 +294,7 @@
                         android:layout_width="0dp"
                         android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="Copy Double"
+                        android:text="@string/copy_double"
                         android:textSize="10sp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
@@ -306,7 +306,7 @@
                         android:layout_width="0dp"
                         android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="Copy Long"
+                        android:text="@string/copy_long"
                         android:textSize="10sp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
@@ -319,11 +319,24 @@
                     android:background="#333333"
                     android:layout_marginVertical="2dp"/>
 
-                <!-- Control Copy -->
+                <!-- Control Copy Grid -->
+                <!-- Row 1: Visibility Controls -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnCopyToggleVis"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_toggle_vis"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
 
                     <Button
                         android:id="@+id/btnCopySetVisible"
@@ -344,6 +357,153 @@
                         android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="@string/copy_set_blocking"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+                </LinearLayout>
+
+                <!-- Row 2: Pos/Pass/Style -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnCopyReset"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_reset"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
+                        android:id="@+id/btnCopyPass"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_pass"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
+                        android:id="@+id/btnCopyStyle"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_style"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+                </LinearLayout>
+
+                <!-- Row 3: Size/Orient -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnCopySizeUp"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_size_up"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
+                        android:id="@+id/btnCopySizeDown"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_size_down"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
+                        android:id="@+id/btnCopyOrient"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_orient"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+                </LinearLayout>
+
+                <!-- Row 4: Bg/Weight/Secs -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnCopyBg"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_bg"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
+                        android:id="@+id/btnCopyWeight"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_weight"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
+                        android:id="@+id/btnCopySeconds"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_seconds"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+                </LinearLayout>
+                
+                <!-- Row 5: Tips -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnCopyTips"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:text="@string/copy_tips"
                         android:textSize="10sp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
