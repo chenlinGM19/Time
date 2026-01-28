@@ -20,6 +20,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -31,13 +32,18 @@ import java.util.Locale;
 public class FloatingClockService extends Service {
 
     public static final String ACTION_TOGGLE_VISIBILITY = "ACTION_TOGGLE_VISIBILITY";
-    public static final String ACTION_TOGGLE_PASSTHROUGH = "ACTION_TOGGLE_PASSTHROUGH"; // New
+    public static final String ACTION_TOGGLE_PASSTHROUGH = "ACTION_TOGGLE_PASSTHROUGH";
     public static final String ACTION_INCREASE_SIZE = "ACTION_INCREASE_SIZE";
     public static final String ACTION_DECREASE_SIZE = "ACTION_DECREASE_SIZE";
     public static final String ACTION_CHANGE_STYLE = "ACTION_CHANGE_STYLE";
-    public static final String ACTION_TOGGLE_SECONDS = "ACTION_TOGGLE_SECONDS"; // New
-    public static final String ACTION_TOGGLE_BG = "ACTION_TOGGLE_BG"; // New
-    public static final String ACTION_TOGGLE_WEIGHT = "ACTION_TOGGLE_WEIGHT"; // New
+    public static final String ACTION_TOGGLE_SECONDS = "ACTION_TOGGLE_SECONDS";
+    public static final String ACTION_TOGGLE_BG = "ACTION_TOGGLE_BG";
+    public static final String ACTION_TOGGLE_WEIGHT = "ACTION_TOGGLE_WEIGHT";
+    
+    // Broadcast Actions for Tasker
+    public static final String ACTION_BROADCAST_CLICK = "com.example.carclock.CLOCK_CLICK";
+    public static final String ACTION_BROADCAST_DOUBLE_CLICK = "com.example.carclock.CLOCK_DOUBLE_CLICK";
+    public static final String ACTION_BROADCAST_LONG_PRESS = "com.example.carclock.CLOCK_LONG_PRESS";
 
     private WindowManager windowManager;
     private View floatingView;
@@ -45,7 +51,7 @@ public class FloatingClockService extends Service {
     private View rootContainer;
     private WindowManager.LayoutParams params;
 
-    private boolean isPassthrough = false; // Controls FLAG_NOT_TOUCHABLE
+    private boolean isPassthrough = false;
     private boolean showSeconds = true;
     private boolean isBgVisible = true;
     private boolean isBold = false;
@@ -53,19 +59,34 @@ public class FloatingClockService extends Service {
     private float currentTextSize = 24f;
     private int currentStyleIndex = 0;
     
-    // Handler for updating time
-    private final Handler handler = new Handler(Looper.getMainLooper());
+    // Touch Handling Variables
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private int clickCount = 0;
+    private boolean isLongPressTriggered = false;
+    
+    // Time Update Runnable
     private final Runnable updateTimeRunnable = new Runnable() {
         @Override
         public void run() {
             if (tvTime != null) {
-                // Determine format based on showSeconds flag
                 String pattern = showSeconds ? "HH:mm:ss" : "HH:mm";
                 SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.getDefault());
                 tvTime.setText(sdf.format(new Date()));
             }
-            handler.postDelayed(this, 1000);
+            mainHandler.postDelayed(this, 1000);
         }
+    };
+    
+    // Click Handling Runnables
+    private final Runnable singleClickRunnable = () -> {
+        clickCount = 0;
+        sendBroadcastAction(ACTION_BROADCAST_CLICK, R.string.tasker_click_sent);
+    };
+    
+    private final Runnable longPressRunnable = () -> {
+        isLongPressTriggered = true;
+        sendBroadcastAction(ACTION_BROADCAST_LONG_PRESS, R.string.tasker_long_press_sent);
+        openMainActivity();
     };
 
     @Override
@@ -76,7 +97,7 @@ public class FloatingClockService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        startForegroundService(); // Keep alive in car units
+        startForegroundService();
         initializeFloatingWindow();
     }
 
@@ -103,12 +124,10 @@ public class FloatingClockService extends Service {
     private void initializeFloatingWindow() {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        // Inflate Layout
         floatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating_clock, null);
         tvTime = floatingView.findViewById(R.id.tv_clock_time);
         rootContainer = floatingView.findViewById(R.id.root_container);
 
-        // Window Params
         int layoutFlag;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -120,28 +139,18 @@ public class FloatingClockService extends Service {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 layoutFlag,
-                // Flags:
-                // NOT_FOCUSABLE: Allows interaction with windows behind it (key events)
-                // LAYOUT_NO_LIMITS: Allows window to extend outside of the screen decorations (status bar)
-                // LAYOUT_IN_SCREEN: Required for some versions to truly overlay the status bar
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | 
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, 
                 PixelFormat.TRANSLUCENT
         );
 
-        // Default Position: Top Leftish
         params.gravity = Gravity.TOP | Gravity.START;
         params.x = 50;
         params.y = 50;
 
-        // Add View
         windowManager.addView(floatingView, params);
-
-        // Start Clock
-        handler.post(updateTimeRunnable);
-
-        // Drag Listener
+        mainHandler.post(updateTimeRunnable);
         setupTouchListener();
     }
 
@@ -151,11 +160,11 @@ public class FloatingClockService extends Service {
             private int initialY;
             private float initialTouchX;
             private float initialTouchY;
+            private static final int CLICK_THRESHOLD = 15; 
+            private static final int LONG_PRESS_TIMEOUT = 800; // ms
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // If passthrough is enabled, the system shouldn't even send events here 
-                // because of FLAG_NOT_TOUCHABLE. But as a safeguard:
                 if (isPassthrough) return false; 
 
                 switch (event.getAction()) {
@@ -164,20 +173,70 @@ public class FloatingClockService extends Service {
                         initialY = params.y;
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
-                        return true;
-
-                    case MotionEvent.ACTION_UP:
+                        
+                        // Reset states
+                        isLongPressTriggered = false;
+                        mainHandler.postDelayed(longPressRunnable, LONG_PRESS_TIMEOUT);
                         return true;
 
                     case MotionEvent.ACTION_MOVE:
-                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
-                        params.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        windowManager.updateViewLayout(floatingView, params);
+                        float diffX = Math.abs(event.getRawX() - initialTouchX);
+                        float diffY = Math.abs(event.getRawY() - initialTouchY);
+                        
+                        // If moved significantly, cancel long press
+                        if (diffX > CLICK_THRESHOLD || diffY > CLICK_THRESHOLD) {
+                            mainHandler.removeCallbacks(longPressRunnable);
+                            
+                            // Only update position (drag) if not long pressed yet
+                            if (!isLongPressTriggered) {
+                                params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                                params.y = initialY + (int) (event.getRawY() - initialTouchY);
+                                windowManager.updateViewLayout(floatingView, params);
+                            }
+                        }
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        mainHandler.removeCallbacks(longPressRunnable);
+
+                        // If long press triggered, consume the event, do not process as click
+                        if (isLongPressTriggered) {
+                            return true; 
+                        }
+
+                        float upDiffX = Math.abs(event.getRawX() - initialTouchX);
+                        float upDiffY = Math.abs(event.getRawY() - initialTouchY);
+
+                        // It is a click if movement is small
+                        if (upDiffX < CLICK_THRESHOLD && upDiffY < CLICK_THRESHOLD) {
+                            clickCount++;
+                            if (clickCount == 1) {
+                                // Wait 300ms to see if it's a double click
+                                mainHandler.postDelayed(singleClickRunnable, 300);
+                            } else if (clickCount == 2) {
+                                // It is a double click
+                                mainHandler.removeCallbacks(singleClickRunnable);
+                                clickCount = 0;
+                                sendBroadcastAction(ACTION_BROADCAST_DOUBLE_CLICK, R.string.tasker_double_click_sent);
+                            }
+                        }
                         return true;
                 }
                 return false;
             }
         });
+    }
+
+    private void sendBroadcastAction(String action, int toastResId) {
+        Intent intent = new Intent(action);
+        sendBroadcast(intent);
+        Toast.makeText(this, toastResId, Toast.LENGTH_SHORT).show();
+    }
+    
+    private void openMainActivity() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
     }
 
     @Override
@@ -191,19 +250,18 @@ public class FloatingClockService extends Service {
                     togglePassthrough();
                     break;
                 case ACTION_INCREASE_SIZE:
-                    changeSize(2f);
+                    changeSize(5f); 
                     break;
                 case ACTION_DECREASE_SIZE:
-                    changeSize(-2f);
+                    changeSize(-5f);
                     break;
                 case ACTION_CHANGE_STYLE:
                     cycleStyle();
                     break;
                 case ACTION_TOGGLE_SECONDS:
                     showSeconds = !showSeconds;
-                    // Force update immediately
-                    handler.removeCallbacks(updateTimeRunnable);
-                    handler.post(updateTimeRunnable);
+                    mainHandler.removeCallbacks(updateTimeRunnable);
+                    mainHandler.post(updateTimeRunnable);
                     break;
                 case ACTION_TOGGLE_BG:
                     toggleBackground();
@@ -227,10 +285,8 @@ public class FloatingClockService extends Service {
     private void togglePassthrough() {
         isPassthrough = !isPassthrough;
         if (isPassthrough) {
-            // Add NOT_TOUCHABLE flag -> touches go through to underlying app
             params.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         } else {
-            // Remove NOT_TOUCHABLE flag -> app intercepts touches (draggable)
             params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         }
         windowManager.updateViewLayout(floatingView, params);
@@ -239,10 +295,8 @@ public class FloatingClockService extends Service {
     private void toggleBackground() {
         isBgVisible = !isBgVisible;
         if (isBgVisible) {
-            // Restore styling logic
             applyStyle(currentStyleIndex); 
         } else {
-            // Remove background
             rootContainer.setBackground(null);
         }
     }
@@ -255,7 +309,6 @@ public class FloatingClockService extends Service {
     private void changeSize(float delta) {
         currentTextSize += delta;
         if (currentTextSize < 12) currentTextSize = 12;
-        if (currentTextSize > 96) currentTextSize = 96; 
         tvTime.setTextSize(currentTextSize);
     }
 
@@ -265,10 +318,8 @@ public class FloatingClockService extends Service {
     }
 
     private void applyStyle(int index) {
-        // If user turned off background, we only update text color but keep BG transparent
         if (!isBgVisible) {
             rootContainer.setBackground(null);
-            // Still need to update text color based on style
              switch (index) {
                 case 0: // Dark
                 case 2: // Blue
@@ -284,9 +335,7 @@ public class FloatingClockService extends Service {
             return;
         }
 
-        // Reset background drawable
         Drawable bg = ContextCompat.getDrawable(this, R.drawable.bg_clock_rounded);
-        // We must mutate it to not share state if we were using multiple instances (good practice)
         if (bg != null) bg = bg.mutate();
         rootContainer.setBackground(bg);
 
@@ -321,6 +370,6 @@ public class FloatingClockService extends Service {
     public void onDestroy() {
         super.onDestroy();
         if (floatingView != null) windowManager.removeView(floatingView);
-        handler.removeCallbacks(updateTimeRunnable);
+        mainHandler.removeCallbacks(updateTimeRunnable);
     }
 }

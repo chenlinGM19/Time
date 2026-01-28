@@ -19,4 +19,9 @@
     <string name="toggle_weight">字体粗/细</string>
     <string name="status_passthrough">状态: 点击穿透 (不可拖拽)</string>
     <string name="status_blocking">状态: 阻挡点击 (可拖拽)</string>
+    
+    <!-- Tasker -->
+    <string name="tasker_click_sent">Tasker: 单击信号</string>
+    <string name="tasker_double_click_sent">Tasker: 双击信号</string>
+    <string name="tasker_long_press_sent">Tasker: 长按信号 + 打开主页</string>
 </resources>
