@@ -1,0 +1,1 @@
+// This file is removed as this is a pure Native Android project.

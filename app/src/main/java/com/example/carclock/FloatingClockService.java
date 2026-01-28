@@ -4,16 +4,15 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -110,15 +109,20 @@ public class FloatingClockService extends Service {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 layoutFlag,
+                // Flags:
+                // NOT_FOCUSABLE: Allows interaction with windows behind it
+                // LAYOUT_NO_LIMITS: Allows window to extend outside of the screen decorations (status bar)
+                // LAYOUT_IN_SCREEN: Required for some versions to truly overlay the status bar
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | 
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, // Allow going over status bar
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, 
                 PixelFormat.TRANSLUCENT
         );
 
         // Default Position: Top Leftish
         params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 100;
-        params.y = 100;
+        params.x = 50;
+        params.y = 50;
 
         // Add View
         windowManager.addView(floatingView, params);
@@ -198,27 +202,39 @@ public class FloatingClockService extends Service {
     private void changeSize(float delta) {
         currentTextSize += delta;
         if (currentTextSize < 12) currentTextSize = 12;
-        if (currentTextSize > 72) currentTextSize = 72;
+        if (currentTextSize > 96) currentTextSize = 96; // Increased max size for car screens
         tvTime.setTextSize(currentTextSize);
     }
 
     private void cycleStyle() {
-        currentStyleIndex = (currentStyleIndex + 1) % 3;
-        GradientDrawable bg = (GradientDrawable) rootContainer.getBackground();
+        currentStyleIndex = (currentStyleIndex + 1) % 4;
+        Drawable bg = rootContainer.getBackground();
         
-        switch (currentStyleIndex) {
-            case 0: // Dark Translucent
-                bg.setColor(Color.parseColor("#99000000"));
-                tvTime.setTextColor(Color.WHITE);
-                break;
-            case 1: // Light Translucent
-                bg.setColor(Color.parseColor("#99FFFFFF"));
-                tvTime.setTextColor(Color.BLACK);
-                break;
-            case 2: // High Contrast Blue
-                bg.setColor(Color.parseColor("#FF2196F3"));
-                tvTime.setTextColor(Color.WHITE);
-                break;
+        // Ensure background is a GradientDrawable before setting color
+        if (bg instanceof GradientDrawable) {
+            GradientDrawable gradientBg = (GradientDrawable) bg;
+            switch (currentStyleIndex) {
+                case 0: // Dark Translucent
+                    gradientBg.setColor(Color.parseColor("#99000000"));
+                    gradientBg.setStroke(2, Color.parseColor("#33FFFFFF"));
+                    tvTime.setTextColor(Color.WHITE);
+                    break;
+                case 1: // Light Translucent
+                    gradientBg.setColor(Color.parseColor("#99FFFFFF"));
+                    gradientBg.setStroke(2, Color.parseColor("#33000000"));
+                    tvTime.setTextColor(Color.BLACK);
+                    break;
+                case 2: // High Contrast Blue
+                    gradientBg.setColor(Color.parseColor("#FF2196F3"));
+                    gradientBg.setStroke(2, Color.WHITE);
+                    tvTime.setTextColor(Color.WHITE);
+                    break;
+                case 3: // Neon Green (High Visibility)
+                    gradientBg.setColor(Color.parseColor("#FF000000"));
+                    gradientBg.setStroke(2, Color.GREEN);
+                    tvTime.setTextColor(Color.GREEN);
+                    break;
+            }
         }
     }
 
