@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Car Floating Clock</string>
+    <string name="perm_required">需要悬浮窗权限才能运行</string>
+    <string name="grant_perm">授予权限</string>
+    <string name="control_panel">控制面板</string>
+    <string name="toggle_show">显示/隐藏</string>
+    <string name="toggle_lock">锁定位置</string>
+    <string name="increase_size">放大字体</string>
+    <string name="decrease_size">缩小字体</string>
+    <string name="change_style">切换样式</string>
+    <string name="status_locked">状态: 已锁定</string>
+    <string name="status_unlocked">状态: 可拖拽</string>
+    <string name="desc">适用于Android 9车机。点击下方按钮调整时钟。</string>
+</resources>

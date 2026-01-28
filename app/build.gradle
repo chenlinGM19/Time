@@ -3,20 +3,20 @@ plugins {
 }
 
 android {
-    namespace 'com.autoclock.headunit'
-    compileSdk 34
+    namespace 'com.example.carclock'
+    compileSdk 33
 
     defaultConfig {
-        applicationId "com.autoclock.headunit"
-        minSdk 28 // Android 9 (Pie)
-        targetSdk 34
+        applicationId "com.example.carclock"
+        minSdk 28 // Android 9
+        targetSdk 33
         versionCode 1
         versionName "1.0"
     }
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -28,5 +28,6 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }

@@ -1,5 +1,6 @@
 {
-  "name": "Android AutoClock Project",
-  "description": "Complete source code explorer for the Native Android Floating Clock project.",
+  "name": "CarFloatingClock",
+  "description": "Native Android Floating Clock for Car Head Units (Android 9+)",
+  "language": "Java",
   "requestFramePermissions": []
 }
