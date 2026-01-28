@@ -151,7 +151,7 @@ public class FloatingClockService extends Service {
         }
         return new NotificationCompat.Builder(this, channelId)
                 .setContentTitle("Floating Clock Active")
-                .setSmallIcon(android.R.drawable.ic_menu_recent_history)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .build();
     }
 
