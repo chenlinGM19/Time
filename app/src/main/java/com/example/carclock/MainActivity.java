@@ -1,5 +1,8 @@
 package com.example.carclock;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         checkOverlayPermission();
 
         setupButtons();
+        setupClipboardButtons();
     }
 
     private void setupButtons() {
@@ -58,6 +62,30 @@ public class MainActivity extends AppCompatActivity {
         btnToggleSeconds.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_SECONDS));
         btnToggleBg.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_BG));
         btnToggleWeight.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_WEIGHT));
+    }
+    
+    private void setupClipboardButtons() {
+        Button btnCopyClick = findViewById(R.id.btnCopyClick);
+        Button btnCopyDouble = findViewById(R.id.btnCopyDouble);
+        Button btnCopyLong = findViewById(R.id.btnCopyLong);
+
+        btnCopyClick.setOnClickListener(v -> 
+            copyToClipboard("Click Intent", FloatingClockService.ACTION_BROADCAST_CLICK));
+            
+        btnCopyDouble.setOnClickListener(v -> 
+            copyToClipboard("Double Click Intent", FloatingClockService.ACTION_BROADCAST_DOUBLE_CLICK));
+            
+        btnCopyLong.setOnClickListener(v -> 
+            copyToClipboard("Long Press Intent", FloatingClockService.ACTION_BROADCAST_LONG_PRESS));
+    }
+
+    private void copyToClipboard(String label, String text) {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText(label, text);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, getString(R.string.toast_copied) + " " + text, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void sendCommand(String action) {

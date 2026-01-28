@@ -24,4 +24,11 @@
     <string name="tasker_click_sent">Tasker: 单击信号</string>
     <string name="tasker_double_click_sent">Tasker: 双击信号</string>
     <string name="tasker_long_press_sent">Tasker: 长按信号 + 打开主页</string>
+    
+    <!-- Clipboard Copy -->
+    <string name="tasker_setup">复制 Tasker 广播动作</string>
+    <string name="copy_click">复制单击</string>
+    <string name="copy_double">复制双击</string>
+    <string name="copy_long">复制长按</string>
+    <string name="toast_copied">已复制: </string>
 </resources>
