@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Card 1: Main Controls (Compacted) -->
+            <!-- Card 1: Appearance -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -173,9 +173,32 @@
                         android:text="@string/toggle_orient"
                         android:textColor="#DDDDDD"/>
                 </LinearLayout>
+
+                <!-- Transparency Slider -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/transparency_label"
+                        android:textColor="#BBBBBB"
+                        android:textSize="11sp"
+                        android:layout_marginStart="4dp"/>
+                        
+                    <SeekBar
+                        android:id="@+id/sbOpacity"
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp"
+                        android:max="100"
+                        android:progress="100" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 2: Behavior (Compacted) -->
+            <!-- Card 2: Behavior -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -251,7 +274,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 3: Tasker Automation (Compacted) -->
+            <!-- Card 3: Tasker Automation -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -320,7 +343,6 @@
                     android:layout_marginVertical="2dp"/>
 
                 <!-- Control Copy Grid -->
-                <!-- Row 1: Visibility Controls -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -363,7 +385,6 @@
                         android:textColor="#BBBBBB"/>
                 </LinearLayout>
 
-                <!-- Row 2: Pos/Pass/Style -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -406,7 +427,6 @@
                         android:textColor="#BBBBBB"/>
                 </LinearLayout>
 
-                <!-- Row 3: Size/Orient -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -449,7 +469,6 @@
                         android:textColor="#BBBBBB"/>
                 </LinearLayout>
 
-                <!-- Row 4: Bg/Weight/Secs -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -492,17 +511,29 @@
                         android:textColor="#BBBBBB"/>
                 </LinearLayout>
                 
-                <!-- Row 5: Tips -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <Button
+                        android:id="@+id/btnCopyOpacity"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/copy_opacity"
+                        android:textSize="10sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:textColor="#BBBBBB"/>
+
+                    <Button
                         android:id="@+id/btnCopyTips"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="36dp"
+                        android:layout_weight="1"
                         android:text="@string/copy_tips"
                         android:textSize="10sp"
                         android:insetTop="0dp"

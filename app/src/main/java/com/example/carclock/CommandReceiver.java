@@ -13,18 +13,21 @@ public class CommandReceiver extends BroadcastReceiver {
         if (intent == null || intent.getAction() == null) return;
 
         String action = intent.getAction();
-        Log.d("CarClock", "Received Tasker Intent: " + action);
+        Log.d("CarClock", "Received Broadcast: " + action);
 
-        // Forward the intent to the Service
         Intent serviceIntent = new Intent(context, FloatingClockService.class);
-        serviceIntent.setAction(action);
+        
+        // If it's boot completed, we just start the service normally
+        // Otherwise, forward the specific action command
+        if (!Intent.ACTION_BOOT_COMPLETED.equals(action) && 
+            !Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action)) {
+            serviceIntent.setAction(action);
+        }
 
-        // Pass any extras if necessary
         if (intent.getExtras() != null) {
             serviceIntent.putExtras(intent.getExtras());
         }
 
-        // Properly start the service from the background
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(serviceIntent);
         } else {

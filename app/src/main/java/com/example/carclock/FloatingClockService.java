@@ -34,7 +34,6 @@ import java.util.Locale;
 
 public class FloatingClockService extends Service {
 
-    // Fully qualified actions
     public static final String ACTION_TOGGLE_VISIBILITY = "com.example.carclock.ACTION_TOGGLE_VISIBILITY";
     public static final String ACTION_TOGGLE_PASSTHROUGH = "com.example.carclock.ACTION_TOGGLE_PASSTHROUGH";
     public static final String ACTION_INCREASE_SIZE = "com.example.carclock.ACTION_INCREASE_SIZE";
@@ -48,14 +47,27 @@ public class FloatingClockService extends Service {
     public static final String ACTION_TOGGLE_TOASTS = "com.example.carclock.ACTION_TOGGLE_TOASTS";
     public static final String ACTION_SET_VISIBLE = "com.example.carclock.ACTION_SET_VISIBLE";
     public static final String ACTION_SET_BLOCKING = "com.example.carclock.ACTION_SET_BLOCKING";
+    public static final String ACTION_SET_OPACITY = "com.example.carclock.ACTION_SET_OPACITY";
     
-    // Broadcast Actions for Tasker (Events)
+    public static final String EXTRA_OPACITY = "extra_opacity"; // Int 0-100
+    
     public static final String ACTION_BROADCAST_CLICK = "com.example.carclock.CLOCK_CLICK";
     public static final String ACTION_BROADCAST_DOUBLE_CLICK = "com.example.carclock.CLOCK_DOUBLE_CLICK";
     public static final String ACTION_BROADCAST_LONG_PRESS = "com.example.carclock.CLOCK_LONG_PRESS";
 
     private static final String PREFS_NAME = "CarClockPrefs";
+    private static final String KEY_X = "pos_x";
+    private static final String KEY_Y = "pos_y";
+    private static final String KEY_PASSTHROUGH = "passthrough";
+    private static final String KEY_SECONDS = "show_seconds";
+    private static final String KEY_BG_VISIBLE = "bg_visible";
+    private static final String KEY_BOLD = "is_bold";
+    private static final String KEY_VERTICAL = "is_vertical";
+    private static final String KEY_TEXT_SIZE = "text_size";
+    private static final String KEY_STYLE_INDEX = "style_index";
     private static final String KEY_SHOW_TOASTS = "show_toasts";
+    private static final String KEY_IS_VISIBLE = "is_visible";
+    private static final String KEY_OPACITY = "bg_opacity";
 
     private WindowManager windowManager;
     private View floatingView;
@@ -69,40 +81,31 @@ public class FloatingClockService extends Service {
     private boolean isBold = false;
     private boolean isVertical = false;
     private boolean showToasts = true;
+    private boolean isVisible = true;
+    private int opacity = 100; // 0-100
 
     private float currentTextSize = 24f;
     private int currentStyleIndex = 0;
     
     private SharedPreferences prefs;
-
-    // Touch Handling Variables
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private int clickCount = 0;
     private boolean isLongPressTriggered = false;
     
-    // Time Update Runnable
     private final Runnable updateTimeRunnable = new Runnable() {
         @Override
         public void run() {
             if (tvTime != null) {
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
                 String timeText = sdf.format(new Date());
-                
-                if (!showSeconds) {
-                    timeText = timeText.substring(0, 5); // HH:mm
-                }
-                
-                if (isVertical) {
-                    timeText = timeText.replace(":", "\n");
-                }
-                
+                if (!showSeconds) timeText = timeText.substring(0, 5);
+                if (isVertical) timeText = timeText.replace(":", "\n");
                 tvTime.setText(timeText);
             }
             mainHandler.postDelayed(this, 1000);
         }
     };
     
-    // Click Handling Runnables
     private final Runnable singleClickRunnable = () -> {
         clickCount = 0;
         sendBroadcastAction(ACTION_BROADCAST_CLICK, R.string.tasker_click_sent);
@@ -115,130 +118,135 @@ public class FloatingClockService extends Service {
     };
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+    public IBinder onBind(Intent intent) { return null; }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        // Load preferences
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        showToasts = prefs.getBoolean(KEY_SHOW_TOASTS, true);
-
+        loadPreferences();
         startForegroundService();
         initializeFloatingWindow();
+    }
+
+    private void loadPreferences() {
+        showToasts = prefs.getBoolean(KEY_SHOW_TOASTS, true);
+        isPassthrough = prefs.getBoolean(KEY_PASSTHROUGH, false);
+        showSeconds = prefs.getBoolean(KEY_SECONDS, true);
+        isBgVisible = prefs.getBoolean(KEY_BG_VISIBLE, true);
+        isBold = prefs.getBoolean(KEY_BOLD, false);
+        isVertical = prefs.getBoolean(KEY_VERTICAL, false);
+        currentTextSize = prefs.getFloat(KEY_TEXT_SIZE, 24f);
+        currentStyleIndex = prefs.getInt(KEY_STYLE_INDEX, 0);
+        isVisible = prefs.getBoolean(KEY_IS_VISIBLE, true);
+        opacity = prefs.getInt(KEY_OPACITY, 100);
+    }
+
+    private void savePosition(int x, int y) {
+        prefs.edit().putInt(KEY_X, x).putInt(KEY_Y, y).apply();
+    }
+
+    private void saveAllSettings() {
+        prefs.edit()
+            .putBoolean(KEY_PASSTHROUGH, isPassthrough)
+            .putBoolean(KEY_SECONDS, showSeconds)
+            .putBoolean(KEY_BG_VISIBLE, isBgVisible)
+            .putBoolean(KEY_BOLD, isBold)
+            .putBoolean(KEY_VERTICAL, isVertical)
+            .putFloat(KEY_TEXT_SIZE, currentTextSize)
+            .putInt(KEY_STYLE_INDEX, currentStyleIndex)
+            .putBoolean(KEY_IS_VISIBLE, isVisible)
+            .putInt(KEY_OPACITY, opacity)
+            .apply();
     }
 
     private void startForegroundService() {
         String channelId = "floating_clock_channel";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    channelId,
-                    "Floating Clock Service",
-                    NotificationManager.IMPORTANCE_LOW
-            );
+                    channelId, "Floating Clock", NotificationManager.IMPORTANCE_LOW);
             getSystemService(NotificationManager.class).createNotificationChannel(channel);
         }
-
         Notification notification = new NotificationCompat.Builder(this, channelId)
                 .setContentTitle("Car Floating Clock")
                 .setContentText("Clock is running")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .build();
-
         startForeground(1, notification);
     }
 
     private void initializeFloatingWindow() {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-
         floatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating_clock, null);
         tvTime = floatingView.findViewById(R.id.tv_clock_time);
         rootContainer = floatingView.findViewById(R.id.root_container);
 
-        int layoutFlag;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
-        }
+        int layoutFlag = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O 
+                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY 
+                : WindowManager.LayoutParams.TYPE_PHONE;
+
+        int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | 
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+        
+        if (isPassthrough) flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
 
         params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
-                layoutFlag,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | 
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, 
-                PixelFormat.TRANSLUCENT
+                layoutFlag, flags, PixelFormat.TRANSLUCENT
         );
 
         params.gravity = Gravity.TOP | Gravity.START;
         
         DisplayMetrics metrics = getResources().getDisplayMetrics();
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
+        params.x = prefs.getInt(KEY_X, (metrics.widthPixels / 2) - 100);
+        params.y = prefs.getInt(KEY_Y, (metrics.heightPixels / 2) - 50);
+
+        tvTime.setTextSize(currentTextSize);
+        tvTime.setTypeface(null, isBold ? Typeface.BOLD : Typeface.NORMAL);
+        applyStyle(currentStyleIndex);
+        rootContainer.setAlpha(opacity / 100f);
         
-        params.x = (screenWidth / 2) - 100;
-        params.y = (screenHeight / 2) - 50;
+        if (!isVisible) floatingView.setVisibility(View.GONE);
 
         windowManager.addView(floatingView, params);
-        
-        floatingView.post(() -> resetPositionToCenter());
-        
         mainHandler.post(updateTimeRunnable);
         setupTouchListener();
     }
 
     private void resetPositionToCenter() {
         if (floatingView == null) return;
-        
         DisplayMetrics metrics = getResources().getDisplayMetrics();
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
-        
-        params.x = (screenWidth - floatingView.getWidth()) / 2;
-        params.y = (screenHeight - floatingView.getHeight()) / 2;
-        
+        params.x = (metrics.widthPixels - floatingView.getWidth()) / 2;
+        params.y = (metrics.heightPixels - floatingView.getHeight()) / 2;
         try {
             windowManager.updateViewLayout(floatingView, params);
-        } catch (Exception e) {
-            // View might be detached
-        }
+            savePosition(params.x, params.y);
+        } catch (Exception ignored) {}
     }
 
     private void setupTouchListener() {
         floatingView.setOnTouchListener(new View.OnTouchListener() {
-            private int initialX;
-            private int initialY;
-            private float initialTouchX;
-            private float initialTouchY;
-            private static final int CLICK_THRESHOLD = 15; 
-            private static final int LONG_PRESS_TIMEOUT = 800; // ms
+            private int initialX, initialY;
+            private float initialTouchX, initialTouchY;
+            private static final int THRESHOLD = 15;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (isPassthrough) return false; 
-
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        initialX = params.x;
-                        initialY = params.y;
-                        initialTouchX = event.getRawX();
-                        initialTouchY = event.getRawY();
-                        
+                        initialX = params.x; initialY = params.y;
+                        initialTouchX = event.getRawX(); initialTouchY = event.getRawY();
                         isLongPressTriggered = false;
-                        mainHandler.postDelayed(longPressRunnable, LONG_PRESS_TIMEOUT);
+                        mainHandler.postDelayed(longPressRunnable, 800);
                         return true;
-
                     case MotionEvent.ACTION_MOVE:
-                        float diffX = Math.abs(event.getRawX() - initialTouchX);
-                        float diffY = Math.abs(event.getRawY() - initialTouchY);
-                        
-                        if (diffX > CLICK_THRESHOLD || diffY > CLICK_THRESHOLD) {
+                        float dx = Math.abs(event.getRawX() - initialTouchX);
+                        float dy = Math.abs(event.getRawY() - initialTouchY);
+                        if (dx > THRESHOLD || dy > THRESHOLD) {
                             mainHandler.removeCallbacks(longPressRunnable);
-                            
                             if (!isLongPressTriggered) {
                                 params.x = initialX + (int) (event.getRawX() - initialTouchX);
                                 params.y = initialY + (int) (event.getRawY() - initialTouchY);
@@ -246,25 +254,21 @@ public class FloatingClockService extends Service {
                             }
                         }
                         return true;
-
                     case MotionEvent.ACTION_UP:
                         mainHandler.removeCallbacks(longPressRunnable);
-
-                        if (isLongPressTriggered) {
-                            return true; 
-                        }
-
-                        float upDiffX = Math.abs(event.getRawX() - initialTouchX);
-                        float upDiffY = Math.abs(event.getRawY() - initialTouchY);
-
-                        if (upDiffX < CLICK_THRESHOLD && upDiffY < CLICK_THRESHOLD) {
-                            clickCount++;
-                            if (clickCount == 1) {
-                                mainHandler.postDelayed(singleClickRunnable, 300);
-                            } else if (clickCount == 2) {
-                                mainHandler.removeCallbacks(singleClickRunnable);
-                                clickCount = 0;
-                                sendBroadcastAction(ACTION_BROADCAST_DOUBLE_CLICK, R.string.tasker_double_click_sent);
+                        if (!isLongPressTriggered) {
+                            float udx = Math.abs(event.getRawX() - initialTouchX);
+                            float udy = Math.abs(event.getRawY() - initialTouchY);
+                            if (udx < THRESHOLD && udy < THRESHOLD) {
+                                clickCount++;
+                                if (clickCount == 1) mainHandler.postDelayed(singleClickRunnable, 300);
+                                else if (clickCount == 2) {
+                                    mainHandler.removeCallbacks(singleClickRunnable);
+                                    clickCount = 0;
+                                    sendBroadcastAction(ACTION_BROADCAST_DOUBLE_CLICK, R.string.tasker_double_click_sent);
+                                }
+                            } else {
+                                savePosition(params.x, params.y);
                             }
                         }
                         return true;
@@ -275,12 +279,8 @@ public class FloatingClockService extends Service {
     }
 
     private void sendBroadcastAction(String action, int toastResId) {
-        Intent intent = new Intent(action);
-        sendBroadcast(intent);
-        
-        if (showToasts) {
-            Toast.makeText(this, toastResId, Toast.LENGTH_SHORT).show();
-        }
+        sendBroadcast(new Intent(action));
+        if (showToasts) Toast.makeText(this, toastResId, Toast.LENGTH_SHORT).show();
     }
     
     private void openMainActivity() {
@@ -292,67 +292,44 @@ public class FloatingClockService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.getAction() != null) {
+            if (ACTION_SET_OPACITY.equals(intent.getAction())) {
+                opacity = intent.getIntExtra(EXTRA_OPACITY, opacity);
+            }
             handleAction(intent.getAction());
         }
-        // Return START_STICKY to ensure service restarts if killed
         return START_STICKY;
     }
     
-    // Logic handler
     private void handleAction(String action) {
         if (floatingView == null) return;
-
         switch (action) {
-            case ACTION_TOGGLE_VISIBILITY:
-                toggleVisibility();
-                break;
-            case ACTION_TOGGLE_PASSTHROUGH:
-                togglePassthrough();
-                break;
-            case ACTION_INCREASE_SIZE:
-                changeSize(5f); 
-                break;
-            case ACTION_DECREASE_SIZE:
-                changeSize(-5f);
-                break;
-            case ACTION_CHANGE_STYLE:
-                cycleStyle();
-                break;
-            case ACTION_TOGGLE_SECONDS:
-                showSeconds = !showSeconds;
-                refreshTimeImmediately();
-                break;
-            case ACTION_TOGGLE_BG:
-                toggleBackground();
-                break;
-            case ACTION_TOGGLE_WEIGHT:
-                toggleFontWeight();
-                break;
-            case ACTION_RESET_POSITION:
-                resetPositionToCenter();
-                break;
-            case ACTION_TOGGLE_ORIENTATION:
-                isVertical = !isVertical;
-                refreshTimeImmediately();
-                break;
+            case ACTION_TOGGLE_VISIBILITY: toggleVisibility(); break;
+            case ACTION_TOGGLE_PASSTHROUGH: togglePassthrough(); break;
+            case ACTION_INCREASE_SIZE: changeSize(5f); break;
+            case ACTION_DECREASE_SIZE: changeSize(-5f); break;
+            case ACTION_CHANGE_STYLE: cycleStyle(); break;
+            case ACTION_TOGGLE_SECONDS: showSeconds = !showSeconds; break;
+            case ACTION_TOGGLE_BG: isBgVisible = !isBgVisible; applyStyle(currentStyleIndex); break;
+            case ACTION_TOGGLE_WEIGHT: isBold = !isBold; tvTime.setTypeface(null, isBold ? Typeface.BOLD : Typeface.NORMAL); break;
+            case ACTION_RESET_POSITION: resetPositionToCenter(); break;
+            case ACTION_TOGGLE_ORIENTATION: isVertical = !isVertical; break;
             case ACTION_TOGGLE_TOASTS:
                 showToasts = !showToasts;
                 prefs.edit().putBoolean(KEY_SHOW_TOASTS, showToasts).apply();
                 Toast.makeText(this, "Tips: " + (showToasts ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
                 break;
-            case ACTION_SET_VISIBLE:
-                if (floatingView.getVisibility() != View.VISIBLE) {
-                    floatingView.setVisibility(View.VISIBLE);
-                }
-                break;
+            case ACTION_SET_VISIBLE: isVisible = true; floatingView.setVisibility(View.VISIBLE); break;
             case ACTION_SET_BLOCKING:
-                if (isPassthrough) {
-                    isPassthrough = false;
-                    params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-                    windowManager.updateViewLayout(floatingView, params);
-                }
+                isPassthrough = false;
+                params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                windowManager.updateViewLayout(floatingView, params);
+                break;
+            case ACTION_SET_OPACITY:
+                rootContainer.setAlpha(opacity / 100f);
                 break;
         }
+        saveAllSettings();
+        refreshTimeImmediately();
     }
     
     private void refreshTimeImmediately() {
@@ -361,35 +338,15 @@ public class FloatingClockService extends Service {
     }
 
     private void toggleVisibility() {
-        if (floatingView.getVisibility() == View.VISIBLE) {
-            floatingView.setVisibility(View.GONE);
-        } else {
-            floatingView.setVisibility(View.VISIBLE);
-        }
+        isVisible = (floatingView.getVisibility() != View.VISIBLE);
+        floatingView.setVisibility(isVisible ? View.VISIBLE : View.GONE);
     }
 
     private void togglePassthrough() {
         isPassthrough = !isPassthrough;
-        if (isPassthrough) {
-            params.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-        } else {
-            params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-        }
+        if (isPassthrough) params.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        else params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
         windowManager.updateViewLayout(floatingView, params);
-    }
-
-    private void toggleBackground() {
-        isBgVisible = !isBgVisible;
-        if (isBgVisible) {
-            applyStyle(currentStyleIndex); 
-        } else {
-            rootContainer.setBackground(null);
-        }
-    }
-
-    private void toggleFontWeight() {
-        isBold = !isBold;
-        tvTime.setTypeface(null, isBold ? Typeface.BOLD : Typeface.NORMAL);
     }
 
     private void changeSize(float delta) {
@@ -406,48 +363,18 @@ public class FloatingClockService extends Service {
     private void applyStyle(int index) {
         if (!isBgVisible) {
             rootContainer.setBackground(null);
-             switch (index) {
-                case 0: // Dark
-                case 2: // Blue
-                    tvTime.setTextColor(Color.WHITE);
-                    break;
-                case 1: // Light
-                    tvTime.setTextColor(Color.BLACK);
-                    break;
-                case 3: // Neon
-                    tvTime.setTextColor(Color.GREEN);
-                    break;
-            }
+            tvTime.setTextColor(index == 1 ? Color.BLACK : (index == 3 ? Color.GREEN : Color.WHITE));
             return;
         }
-
-        Drawable bg = ContextCompat.getDrawable(this, R.drawable.bg_clock_rounded);
-        if (bg != null) bg = bg.mutate();
+        Drawable bg = ContextCompat.getDrawable(this, R.drawable.bg_clock_rounded).mutate();
         rootContainer.setBackground(bg);
-
         if (bg instanceof GradientDrawable) {
-            GradientDrawable gradientBg = (GradientDrawable) bg;
+            GradientDrawable g = (GradientDrawable) bg;
             switch (index) {
-                case 0: // Dark Translucent
-                    gradientBg.setColor(Color.parseColor("#99000000"));
-                    gradientBg.setStroke(2, Color.parseColor("#33FFFFFF"));
-                    tvTime.setTextColor(Color.WHITE);
-                    break;
-                case 1: // Light Translucent
-                    gradientBg.setColor(Color.parseColor("#99FFFFFF"));
-                    gradientBg.setStroke(2, Color.parseColor("#33000000"));
-                    tvTime.setTextColor(Color.BLACK);
-                    break;
-                case 2: // High Contrast Blue
-                    gradientBg.setColor(Color.parseColor("#FF2196F3"));
-                    gradientBg.setStroke(2, Color.WHITE);
-                    tvTime.setTextColor(Color.WHITE);
-                    break;
-                case 3: // Neon Green (High Visibility)
-                    gradientBg.setColor(Color.parseColor("#FF000000"));
-                    gradientBg.setStroke(2, Color.GREEN);
-                    tvTime.setTextColor(Color.GREEN);
-                    break;
+                case 0: g.setColor(Color.parseColor("#99000000")); tvTime.setTextColor(Color.WHITE); break;
+                case 1: g.setColor(Color.parseColor("#99FFFFFF")); tvTime.setTextColor(Color.BLACK); break;
+                case 2: g.setColor(Color.parseColor("#FF2196F3")); tvTime.setTextColor(Color.WHITE); break;
+                case 3: g.setColor(Color.parseColor("#FF000000")); g.setStroke(2, Color.GREEN); tvTime.setTextColor(Color.GREEN); break;
             }
         }
     }

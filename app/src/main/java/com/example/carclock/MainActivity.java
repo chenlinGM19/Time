@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
     private static final String PREFS_NAME = "CarClockPrefs";
     private static final String KEY_SHOW_TOASTS = "show_toasts";
+    private static final String KEY_OPACITY = "bg_opacity";
     
     private TextView tvStatus;
     private boolean isPassthrough = false;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         setupButtons();
         setupClipboardButtons();
+        setupSliders();
     }
 
     private void setupButtons() {
@@ -72,6 +75,31 @@ public class MainActivity extends AppCompatActivity {
         btnToggleSeconds.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_SECONDS));
         btnToggleTips.setOnClickListener(v -> sendCommand(FloatingClockService.ACTION_TOGGLE_TOASTS));
     }
+
+    private void setupSliders() {
+        SeekBar sbOpacity = findViewById(R.id.sbOpacity);
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int currentOpacity = prefs.getInt(KEY_OPACITY, 100);
+        sbOpacity.setProgress(currentOpacity);
+        
+        sbOpacity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    Intent intent = new Intent(MainActivity.this, FloatingClockService.class);
+                    intent.setAction(FloatingClockService.ACTION_SET_OPACITY);
+                    intent.putExtra(FloatingClockService.EXTRA_OPACITY, progress);
+                    startService(intent);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
     
     private void setupClipboardButtons() {
         // Event Intents (Sent by App)
@@ -89,45 +117,24 @@ public class MainActivity extends AppCompatActivity {
             copyToClipboard("Long Press Intent", FloatingClockService.ACTION_BROADCAST_LONG_PRESS));
             
         // Control Intents (Received by App)
-        // Row 1
-        Button btnCopyToggleVis = findViewById(R.id.btnCopyToggleVis);
-        Button btnCopySetVisible = findViewById(R.id.btnCopySetVisible);
-        Button btnCopySetBlocking = findViewById(R.id.btnCopySetBlocking);
+        findViewById(R.id.btnCopyToggleVis).setOnClickListener(v -> copyToClipboard("Toggle Show Intent", FloatingClockService.ACTION_TOGGLE_VISIBILITY));
+        findViewById(R.id.btnCopySetVisible).setOnClickListener(v -> copyToClipboard("Force Visible Intent", FloatingClockService.ACTION_SET_VISIBLE));
+        findViewById(R.id.btnCopySetBlocking).setOnClickListener(v -> copyToClipboard("Force Blocking Intent", FloatingClockService.ACTION_SET_BLOCKING));
+        findViewById(R.id.btnCopyReset).setOnClickListener(v -> copyToClipboard("Reset Pos Intent", FloatingClockService.ACTION_RESET_POSITION));
+        findViewById(R.id.btnCopyPass).setOnClickListener(v -> copyToClipboard("Toggle Pass Intent", FloatingClockService.ACTION_TOGGLE_PASSTHROUGH));
+        findViewById(R.id.btnCopyStyle).setOnClickListener(v -> copyToClipboard("Change Style Intent", FloatingClockService.ACTION_CHANGE_STYLE));
+        findViewById(R.id.btnCopySizeUp).setOnClickListener(v -> copyToClipboard("Size + Intent", FloatingClockService.ACTION_INCREASE_SIZE));
+        findViewById(R.id.btnCopySizeDown).setOnClickListener(v -> copyToClipboard("Size - Intent", FloatingClockService.ACTION_DECREASE_SIZE));
+        findViewById(R.id.btnCopyOrient).setOnClickListener(v -> copyToClipboard("Toggle Orient Intent", FloatingClockService.ACTION_TOGGLE_ORIENTATION));
+        findViewById(R.id.btnCopyBg).setOnClickListener(v -> copyToClipboard("Toggle BG Intent", FloatingClockService.ACTION_TOGGLE_BG));
+        findViewById(R.id.btnCopyWeight).setOnClickListener(v -> copyToClipboard("Toggle Weight Intent", FloatingClockService.ACTION_TOGGLE_WEIGHT));
+        findViewById(R.id.btnCopySeconds).setOnClickListener(v -> copyToClipboard("Toggle Seconds Intent", FloatingClockService.ACTION_TOGGLE_SECONDS));
+        findViewById(R.id.btnCopyTips).setOnClickListener(v -> copyToClipboard("Toggle Tips Intent", FloatingClockService.ACTION_TOGGLE_TOASTS));
         
-        btnCopyToggleVis.setOnClickListener(v -> copyToClipboard("Toggle Show Intent", FloatingClockService.ACTION_TOGGLE_VISIBILITY));
-        btnCopySetVisible.setOnClickListener(v -> copyToClipboard("Force Visible Intent", FloatingClockService.ACTION_SET_VISIBLE));
-        btnCopySetBlocking.setOnClickListener(v -> copyToClipboard("Force Blocking Intent", FloatingClockService.ACTION_SET_BLOCKING));
-
-        // Row 2
-        Button btnCopyReset = findViewById(R.id.btnCopyReset);
-        Button btnCopyPass = findViewById(R.id.btnCopyPass);
-        Button btnCopyStyle = findViewById(R.id.btnCopyStyle);
-        
-        btnCopyReset.setOnClickListener(v -> copyToClipboard("Reset Pos Intent", FloatingClockService.ACTION_RESET_POSITION));
-        btnCopyPass.setOnClickListener(v -> copyToClipboard("Toggle Pass Intent", FloatingClockService.ACTION_TOGGLE_PASSTHROUGH));
-        btnCopyStyle.setOnClickListener(v -> copyToClipboard("Change Style Intent", FloatingClockService.ACTION_CHANGE_STYLE));
-        
-        // Row 3
-        Button btnCopySizeUp = findViewById(R.id.btnCopySizeUp);
-        Button btnCopySizeDown = findViewById(R.id.btnCopySizeDown);
-        Button btnCopyOrient = findViewById(R.id.btnCopyOrient);
-        
-        btnCopySizeUp.setOnClickListener(v -> copyToClipboard("Size + Intent", FloatingClockService.ACTION_INCREASE_SIZE));
-        btnCopySizeDown.setOnClickListener(v -> copyToClipboard("Size - Intent", FloatingClockService.ACTION_DECREASE_SIZE));
-        btnCopyOrient.setOnClickListener(v -> copyToClipboard("Toggle Orient Intent", FloatingClockService.ACTION_TOGGLE_ORIENTATION));
-
-        // Row 4
-        Button btnCopyBg = findViewById(R.id.btnCopyBg);
-        Button btnCopyWeight = findViewById(R.id.btnCopyWeight);
-        Button btnCopySeconds = findViewById(R.id.btnCopySeconds);
-        
-        btnCopyBg.setOnClickListener(v -> copyToClipboard("Toggle BG Intent", FloatingClockService.ACTION_TOGGLE_BG));
-        btnCopyWeight.setOnClickListener(v -> copyToClipboard("Toggle Weight Intent", FloatingClockService.ACTION_TOGGLE_WEIGHT));
-        btnCopySeconds.setOnClickListener(v -> copyToClipboard("Toggle Seconds Intent", FloatingClockService.ACTION_TOGGLE_SECONDS));
-
-        // Row 5
-        Button btnCopyTips = findViewById(R.id.btnCopyTips);
-        btnCopyTips.setOnClickListener(v -> copyToClipboard("Toggle Tips Intent", FloatingClockService.ACTION_TOGGLE_TOASTS));
+        findViewById(R.id.btnCopyOpacity).setOnClickListener(v -> {
+             String intentStr = FloatingClockService.ACTION_SET_OPACITY + " --ei extra_opacity 50";
+             copyToClipboard("Set Opacity 50%", intentStr);
+        });
     }
 
     private void copyToClipboard(String label, String text) {
@@ -135,12 +142,8 @@ public class MainActivity extends AppCompatActivity {
         ClipData clip = ClipData.newPlainText(label, text);
         if (clipboard != null) {
             clipboard.setPrimaryClip(clip);
-            
-            // Respect global toast settings
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            boolean showToasts = prefs.getBoolean(KEY_SHOW_TOASTS, true);
-            
-            if (showToasts) {
+            if (prefs.getBoolean(KEY_SHOW_TOASTS, true)) {
                 Toast.makeText(this, getString(R.string.toast_copied) + " " + text, Toast.LENGTH_SHORT).show();
             }
         }
@@ -155,19 +158,15 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, FloatingClockService.class);
         intent.setAction(action);
         startService(intent);
-        
-        // REMOVED: Toast.makeText(this, R.string.toast_cmd_sent, Toast.LENGTH_SHORT).show();
     }
 
     private void checkOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, R.string.perm_required, Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, OVERLAY_PERMISSION_REQ_CODE);
             } else {
-                // Auto start service if permission granted
                 startFloatingService();
             }
         } else {
@@ -179,12 +178,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (Settings.canDrawOverlays(this)) {
-                    startFloatingService();
-                } else {
-                    Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+                startFloatingService();
             }
         }
     }

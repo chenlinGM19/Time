@@ -19,6 +19,7 @@
     <string name="toggle_bg">背景: 开/关</string>
     <string name="toggle_weight">字体: 粗/细</string>
     <string name="toggle_seconds">秒针: 显示/隐藏</string>
+    <string name="transparency_label">背景透明度</string>
     
     <!-- Logic Actions -->
     <string name="toggle_passthrough">点击穿透模式</string>
@@ -58,4 +59,5 @@
     <string name="copy_weight">复制 [粗细开关]</string>
     <string name="copy_seconds">复制 [秒针开关]</string>
     <string name="copy_tips">复制 [提示开关]</string>
+    <string name="copy_opacity">复制 [设置不透明度 50%]</string>
 </resources>
